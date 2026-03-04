@@ -35,7 +35,7 @@ SpacePill is a lightweight native macOS menu bar application designed help you n
 
 ### Homebrew
 ```bash
-brew tap jakequist/tap
+brew tap jakequist/spacepill https://github.com/jakequist/spacepill
 brew install spacepill
 ```
 
