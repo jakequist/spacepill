@@ -35,14 +35,9 @@ SpacePill is a lightweight native macOS menu bar application designed help you n
 
 ### Homebrew
 ```bash
-brew install jakequist/tap/spacepill
+brew tap jakequist/tap
+brew install spacepill
 ```
-
-> [!TIP]
-> If `brew` prompts you for a GitHub username/password, you can configure Git to use SSH for GitHub instead:
-> ```
-> git config --global url."git@github.com:".insteadOf "https://github.com/"`
-> ```
 
 ### Build from Source
 ```bash
