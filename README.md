@@ -12,8 +12,20 @@
 
 SpacePill is a lightweight native macOS menu bar application designed help you navigate multipe Spaces. 
 
+**Key Features:**
 
-## ✨ Screenshots & Features 
+* Big color-coded pill-style indicator in your menu bar that corresponds to your current Space.
+* Global hot key (default shift+cmd+S) to quickly relabel your current Space.
+* Global hot key (defeault shift+cmd+J) to quickly jump to a Space by fuzzy-typing the target label (or number). 
+
+**Why?**
+
+Because I run a lot of coding agents in parallel, one agent per Space. 
+This utility helps me context switch faster and keep my work organized. 
+
+
+
+## ✨ Screenshots 
 
 * Pill-style Indicator: optionally color coded to help you know what Space you're on. 
   
