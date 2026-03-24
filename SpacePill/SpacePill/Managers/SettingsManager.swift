@@ -5,6 +5,8 @@ import ServiceManagement
 struct SpaceConfig: Codable {
     var label: String?
     var hexColor: String? 
+    var isNotesOpen: Bool?
+    var scrollPosition: Double?
     
     var color: Color? {
         guard let hex = hexColor else { return nil }
@@ -91,15 +93,32 @@ struct HotKeyConfig: Codable, Equatable {
 }
 
 /**
+ * Data structure for all app settings.
+ */
+struct SettingsData: Codable {
+    var isQuickSwitchEnabled: Bool = false
+    var isNotesEnabled: Bool = false
+    var matchSpaceColorForNotesBorder: Bool = true
+    var maxNotesHeight: Double = 300.0
+    var quickEditHotKey: HotKeyConfig = HotKeyConfig(keyCode: 1, modifiers: 0x0100 | 0x0200)
+    var quickSwitchHotKey: HotKeyConfig = HotKeyConfig(keyCode: 38, modifiers: 0x0100 | 0x0200)
+    var notesHotKey: HotKeyConfig = HotKeyConfig(keyCode: 45, modifiers: 0x0100 | 0x0200)
+    var spaceConfigs: [String: SpaceConfig] = [:]
+}
+
+/**
  * Handles persistence of space configurations (labels and colors) and app settings.
+ * Now stores everything in ~/.spacepill/settings.json.
  */
 class SettingsManager: ObservableObject {
-    @Published var spaceConfigs: [String: SpaceConfig] = [:]
-    @Published var isQuickSwitchEnabled: Bool = false {
-        didSet {
-            userDefaults.set(isQuickSwitchEnabled, forKey: "isQuickSwitchEnabled")
-        }
-    }
+    @Published var isQuickSwitchEnabled: Bool = false { didSet { save() } }
+    @Published var isNotesEnabled: Bool = false { didSet { save() } }
+    @Published var matchSpaceColorForNotesBorder: Bool = true { didSet { save() } }
+    @Published var maxNotesHeight: Double = 300.0 { didSet { save() } }
+    @Published var quickEditHotKey: HotKeyConfig = HotKeyConfig(keyCode: 1, modifiers: 0x0100 | 0x0200) { didSet { save() } }
+    @Published var quickSwitchHotKey: HotKeyConfig = HotKeyConfig(keyCode: 38, modifiers: 0x0100 | 0x0200) { didSet { save() } }
+    @Published var notesHotKey: HotKeyConfig = HotKeyConfig(keyCode: 45, modifiers: 0x0100 | 0x0200) { didSet { save() } }
+    @Published var spaceConfigs: [String: SpaceConfig] = [:] { didSet { save() } }
     
     @Published var launchAtLogin: Bool = false {
         didSet {
@@ -107,49 +126,38 @@ class SettingsManager: ObservableObject {
         }
     }
     
-    // Default hotkeys: 
-    // Quick Edit: Cmd+Shift+S (keyCode 1, mods 0x0100 | 0x0200)
-    // Quick Switch: Cmd+Shift+J (keyCode 38, mods 0x0100 | 0x0200)
-    @Published var quickEditHotKey: HotKeyConfig {
-        didSet {
-            saveSettings()
-        }
-    }
-    @Published var quickSwitchHotKey: HotKeyConfig {
-        didSet {
-            saveSettings()
-        }
-    }
+    private let settingsURL: URL = {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let baseDir = home.appendingPathComponent(".spacepill", isDirectory: true)
+        try? FileManager.default.createDirectory(at: baseDir, withIntermediateDirectories: true)
+        return baseDir.appendingPathComponent("settings.json")
+    }()
     
-    private let userDefaults = UserDefaults.standard
-    private let configsKey = "spacepill_configs_v2"
-    private let editHotKeyKey = "spacepill_edit_hotkey"
-    private let switchHotKeyKey = "spacepill_switch_hotkey"
+    private var isUpdating = false
     
     init() {
-        // Load hotkeys with defaults
-        if let data = userDefaults.data(forKey: editHotKeyKey),
-           let decoded = try? JSONDecoder().decode(HotKeyConfig.self, from: data) {
-            self.quickEditHotKey = decoded
-        } else {
-            self.quickEditHotKey = HotKeyConfig(keyCode: 1, modifiers: 0x0100 | 0x0200)
-        }
-        
-        if let data = userDefaults.data(forKey: switchHotKeyKey),
-           let decoded = try? JSONDecoder().decode(HotKeyConfig.self, from: data) {
-            self.quickSwitchHotKey = decoded
-        } else {
-            self.quickSwitchHotKey = HotKeyConfig(keyCode: 38, modifiers: 0x0100 | 0x0200)
-        }
+        print("SpacePill: SettingsManager initializing")
+        load()
+        syncLaunchAtLogin()
+    }
 
-        loadConfigs()
-        self.isQuickSwitchEnabled = userDefaults.bool(forKey: "isQuickSwitchEnabled")
+    private func syncLaunchAtLogin() {
+        // SMAppService requires a proper app bundle and CFBundleIdentifier.
+        // It will trap (crash) if run directly from a binary.
+        guard Bundle.main.bundleIdentifier != nil else {
+            print("SpacePill: Skipping SMAppService sync - not a proper app bundle")
+            return
+        }
         
-        // Sync launchAtLogin with system state
+        self.isUpdating = true
         self.launchAtLogin = SMAppService.mainApp.status == .enabled
+        self.isUpdating = false
     }
 
     private func updateLoginItem() {
+        guard !isUpdating else { return }
+        guard Bundle.main.bundleIdentifier != nil else { return }
+        
         let service = SMAppService.mainApp
         do {
             if launchAtLogin {
@@ -166,49 +174,93 @@ class SettingsManager: ObservableObject {
         }
     }
     
-    func loadConfigs() {
-        if let data = userDefaults.data(forKey: configsKey),
-           let decoded = try? JSONDecoder().decode([String: SpaceConfig].self, from: data) {
-            spaceConfigs = decoded
+    func load() {
+        isUpdating = true
+        defer { isUpdating = false }
+        
+        if let data = try? Data(contentsOf: settingsURL),
+           let decoded = try? JSONDecoder().decode(SettingsData.self, from: data) {
+            applySettings(decoded)
+        } else {
+            migrateFromUserDefaults()
         }
     }
     
-    func saveSettings() {
-        if let encoded = try? JSONEncoder().encode(quickEditHotKey) {
-            userDefaults.set(encoded, forKey: editHotKeyKey)
-        }
-        if let encoded = try? JSONEncoder().encode(quickSwitchHotKey) {
-            userDefaults.set(encoded, forKey: switchHotKeyKey)
-        }
-        objectWillChange.send()
+    private func applySettings(_ data: SettingsData) {
+        self.isQuickSwitchEnabled = data.isQuickSwitchEnabled
+        self.isNotesEnabled = data.isNotesEnabled
+        self.matchSpaceColorForNotesBorder = data.matchSpaceColorForNotesBorder
+        self.maxNotesHeight = data.maxNotesHeight
+        self.quickEditHotKey = data.quickEditHotKey
+        self.quickSwitchHotKey = data.quickSwitchHotKey
+        self.notesHotKey = data.notesHotKey
+        self.spaceConfigs = data.spaceConfigs
     }
     
-    func saveConfigs() {
-        if let encoded = try? JSONEncoder().encode(spaceConfigs) {
-            userDefaults.set(encoded, forKey: configsKey)
+    private func migrateFromUserDefaults() {
+        let ud = UserDefaults.standard
+        let newData = SettingsData(
+            isQuickSwitchEnabled: ud.bool(forKey: "isQuickSwitchEnabled"),
+            isNotesEnabled: false,
+            matchSpaceColorForNotesBorder: true,
+            maxNotesHeight: 300.0,
+            quickEditHotKey: ud.data(forKey: "spacepill_edit_hotkey").flatMap { try? JSONDecoder().decode(HotKeyConfig.self, from: $0) } ?? HotKeyConfig(keyCode: 1, modifiers: 0x0100 | 0x0200),
+            quickSwitchHotKey: ud.data(forKey: "spacepill_switch_hotkey").flatMap { try? JSONDecoder().decode(HotKeyConfig.self, from: $0) } ?? HotKeyConfig(keyCode: 38, modifiers: 0x0100 | 0x0200),
+            notesHotKey: ud.data(forKey: "spacepill_notes_hotkey").flatMap { try? JSONDecoder().decode(HotKeyConfig.self, from: $0) } ?? HotKeyConfig(keyCode: 45, modifiers: 0x0100 | 0x0200),
+            spaceConfigs: ud.data(forKey: "spacepill_configs_v2").flatMap { try? JSONDecoder().decode([String: SpaceConfig].self, from: $0) } ?? [:]
+        )
+        
+        applySettings(newData)
+        save()
+    }
+    
+    func save() {
+        guard !isUpdating else { return }
+        
+        let currentData = SettingsData(
+            isQuickSwitchEnabled: isQuickSwitchEnabled,
+            isNotesEnabled: isNotesEnabled,
+            matchSpaceColorForNotesBorder: matchSpaceColorForNotesBorder,
+            maxNotesHeight: maxNotesHeight,
+            quickEditHotKey: quickEditHotKey,
+            quickSwitchHotKey: quickSwitchHotKey,
+            notesHotKey: notesHotKey,
+            spaceConfigs: spaceConfigs
+        )
+        
+        if let encoded = try? JSONEncoder().encode(currentData) {
+            try? encoded.write(to: settingsURL)
         }
     }
     
     func setConfig(for uuid: String, label: String?, hexColor: String?) {
-        spaceConfigs[uuid] = SpaceConfig(label: label, hexColor: hexColor)
-        saveConfigs()
-        objectWillChange.send()
+        var config = spaceConfigs[uuid] ?? SpaceConfig()
+        config.label = label
+        config.hexColor = hexColor
+        spaceConfigs[uuid] = config
+    }
+    
+    func setNotesOpen(for uuid: String, isOpen: Bool) {
+        var config = spaceConfigs[uuid] ?? SpaceConfig()
+        config.isNotesOpen = isOpen
+        spaceConfigs[uuid] = config
+    }
+    
+    func setScrollPosition(for uuid: String, position: Double) {
+        var config = spaceConfigs[uuid] ?? SpaceConfig()
+        config.scrollPosition = position
+        spaceConfigs[uuid] = config
     }
     
     func clearConfig(for uuid: String) {
         spaceConfigs.removeValue(forKey: uuid)
-        saveConfigs()
-        objectWillChange.send()
     }
     
     func resetAll() {
         spaceConfigs = [:]
-        saveConfigs()
-        objectWillChange.send()
     }
 }
 
-// ... Color extensions remain the same ...
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

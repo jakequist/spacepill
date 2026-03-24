@@ -1,62 +1,93 @@
 import SwiftUI
 import AppKit
+import Combine
 
 /**
  * Manages the SpacePill menu bar item and its associated views.
- * Handles left-click (quick-edit popover) and right-click (context menu).
  */
 class StatusBarController: NSObject {
     var statusBarItem: NSStatusItem
     private var popover: NSPopover?
+    private var notesWindow: NSWindow?
     private var settingsManager: SettingsManager
     private var spaceManager: SpaceManager
+    private var notesManager: NotesManager
     private weak var appDelegate: AppDelegate?
+    private var cancellables = Set<AnyCancellable>()
     
-    init(_ settingsManager: SettingsManager, _ spaceManager: SpaceManager, _ appDelegate: AppDelegate) {
+    init(_ settingsManager: SettingsManager, _ spaceManager: SpaceManager, _ notesManager: NotesManager, _ appDelegate: AppDelegate) {
         // Use a fixed length for a clear rectangular look. 150px provides ample room.
         self.statusBarItem = NSStatusBar.system.statusItem(withLength: 150)
         self.settingsManager = settingsManager
         self.spaceManager = spaceManager
+        self.notesManager = notesManager
         self.appDelegate = appDelegate
         super.init()
         
         setupStatusBarItem()
+        setupSpaceObserver()
+        setupResizeObserver()
+    }
+    
+    private func setupResizeObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleResize),
+            name: Notification.Name("NotesWindowShouldResize"),
+            object: nil
+        )
+    }
+    
+    @objc private func handleResize() {
+        positionNotesWindow()
+    }
+    
+    private func setupSpaceObserver() {
+        spaceManager.$currentSpaceIndex
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.handleSpaceChange()
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func handleSpaceChange() {
+        guard settingsManager.isNotesEnabled else {
+            notesWindow?.orderOut(nil)
+            return
+        }
+        
+        guard let uuid = spaceManager.currentSpaceUUID else { return }
+        let shouldBeOpen = settingsManager.spaceConfigs[uuid]?.isNotesOpen ?? false
+        
+        if shouldBeOpen {
+            ensureNotesWindowExists()
+            positionNotesWindow()
+            notesWindow?.makeKeyAndOrderFront(nil)
+        } else {
+            notesWindow?.orderOut(nil)
+        }
     }
     
     private func setupStatusBarItem() {
         guard let button = statusBarItem.button else { return }
         
-        setupHostingView(on: button)
-        setupButtonAction(on: button)
+        let indicatorView = MenuBarIndicatorView(settingsManager: settingsManager, spaceManager: spaceManager)
+        let hostingView = NSHostingView(rootView: indicatorView)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 150, height: 22)
+        button.addSubview(hostingView)
+        
+        button.target = self
+        button.action = #selector(handleAction(_:))
+        button.sendAction(on: [.leftMouseDown, .rightMouseDown])
         
         print("SpacePill: Status bar button setup complete")
     }
     
-    private func setupHostingView(on button: NSStatusBarButton) {
-        let indicatorView = MenuBarIndicatorView(settingsManager: settingsManager, spaceManager: spaceManager)
-        let hostingView = NSHostingView(rootView: indicatorView)
-        
-        hostingView.translatesAutoresizingMaskIntoConstraints = false
-        button.addSubview(hostingView)
-        
-        NSLayoutConstraint.activate([
-            hostingView.leadingAnchor.constraint(equalTo: button.leadingAnchor),
-            hostingView.trailingAnchor.constraint(equalTo: button.trailingAnchor),
-            hostingView.topAnchor.constraint(equalTo: button.topAnchor),
-            hostingView.bottomAnchor.constraint(equalTo: button.bottomAnchor)
-        ])
-    }
-    
-    private func setupButtonAction(on button: NSStatusBarButton) {
-        button.action = #selector(handleAction(_:))
-        button.sendAction(on: [.leftMouseDown, .rightMouseDown])
-        button.target = self
-    }
-    
     @objc func handleAction(_ sender: NSStatusBarButton) {
-        let event = NSApp.currentEvent!
+        let event = NSApp.currentEvent
         
-        if event.type == .rightMouseDown {
+        if event?.type == .rightMouseDown {
             showContextMenu(on: sender)
         } else {
             showQuickEditDialog()
@@ -75,9 +106,83 @@ class StatusBarController: NSObject {
         let quitItem = NSMenuItem(title: "Quit SpacePill", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.addItem(quitItem)
         
-        statusBarItem.menu = menu
-        statusBarItem.button?.performClick(nil)
-        statusBarItem.menu = nil
+        // Show menu manually to avoid conflicts with mouseDown processing
+        statusBarItem.popUpMenu(menu)
+    }
+    
+    @objc func showNotesWindow() {
+        guard settingsManager.isNotesEnabled else { return }
+        
+        if let window = notesWindow, window.isVisible {
+            if window.isKeyWindow {
+                // If already focused, hide it
+                window.orderOut(nil)
+                if let uuid = spaceManager.currentSpaceUUID {
+                    settingsManager.setNotesOpen(for: uuid, isOpen: false)
+                }
+            } else {
+                // If visible but not focused, focus it
+                window.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+            return
+        }
+        
+        ensureNotesWindowExists()
+        
+        positionNotesWindow()
+        notesWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        
+        if let uuid = spaceManager.currentSpaceUUID {
+            settingsManager.setNotesOpen(for: uuid, isOpen: true)
+        }
+    }
+    
+    private func ensureNotesWindowExists() {
+        guard settingsManager.isNotesEnabled else { return }
+        
+        if notesWindow == nil {
+            let view = NotesView(notesManager: notesManager, settingsManager: settingsManager, spaceManager: spaceManager)
+            let hostingController = NSHostingController(rootView: view)
+            
+            let window = NotesPanel(
+                contentRect: NSRect(x: 0, y: 0, width: 400, height: 100),
+                styleMask: [.borderless, .fullSizeContentView],
+                backing: .buffered,
+                defer: false
+            )
+            window.isFloatingPanel = true
+            window.becomesKeyOnlyIfNeeded = false
+            window.hidesOnDeactivate = false
+            window.level = .statusBar
+            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+            window.backgroundColor = .clear
+            window.hasShadow = true
+            window.contentViewController = hostingController
+            
+            notesWindow = window
+        }
+    }
+    
+    private func positionNotesWindow() {
+        guard let button = statusBarItem.button,
+              let window = notesWindow,
+              let screen = NSScreen.main else { return }
+        
+        let buttonFrame = button.window?.frame ?? .zero
+        let screenFrame = screen.visibleFrame
+        
+        // Use the size from the hosting controller's view
+        let contentSize = window.contentViewController?.view.fittingSize ?? CGSize(width: 400, height: 100)
+        let windowHeight = contentSize.height
+        
+        // "starts at our menubar pill UI, and then runs all the way to the right of the screen"
+        let windowX = buttonFrame.origin.x
+        let windowY = buttonFrame.origin.y - windowHeight - 5 // Dynamic height + small gap
+        let windowWidth = screenFrame.maxX - windowX - 10 // 10px padding from right
+        
+        window.setFrame(NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight), display: true, animate: false)
     }
     
     func showQuickEditDialog() {
@@ -201,4 +306,12 @@ extension Color {
         nsColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
         return Color(NSColor(calibratedHue: hue, saturation: saturation, brightness: max(brightness - percentage, 0.0), alpha: alpha))
     }
+}
+
+/**
+ * A specialized NSPanel that allows becoming the key window to accept keyboard input.
+ */
+class NotesPanel: NSPanel {
+    override var canBecomeKey: Bool { return true }
+    override var canBecomeMain: Bool { return true }
 }

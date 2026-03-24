@@ -5,6 +5,7 @@ import Combine
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var settingsManager = SettingsManager()
     var spaceManager = SpaceManager()
+    lazy var notesManager = NotesManager(spaceManager: spaceManager)
     var hotKeyManager = GlobalHotKeyManager()
     var statusBarController: StatusBarController?
     
@@ -27,9 +28,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         print("SpacePill: AppDelegate applicationDidFinishLaunching")
         NSApp.setActivationPolicy(.accessory)
         
-        statusBarController = StatusBarController(settingsManager, spaceManager, self)
+        statusBarController = StatusBarController(settingsManager, spaceManager, notesManager, self)
         
         setupHotKeys()
+        setupSignalHandlers()
         
         // Listen for setting changes
         settingsManager.objectWillChange.sink { [weak self] _ in
@@ -37,6 +39,31 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 self?.setupHotKeys()
             }
         }.store(in: &cancellables)
+    }
+    
+    private func setupSignalHandlers() {
+        let signals = [SIGINT, SIGTERM]
+        for sig in signals {
+            let source = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+            source.setEventHandler { [weak self] in
+                print("\nSpacePill: Received signal \(sig), exiting gracefully...")
+                self?.saveAll()
+                NSApp.terminate(nil)
+            }
+            source.resume()
+            // We need to ignore the default signal handling or it will kill us immediately
+            signal(sig, SIG_IGN)
+        }
+    }
+    
+    func saveAll() {
+        print("SpacePill: Saving all state before exit...")
+        settingsManager.save()
+        notesManager.saveCurrentNotes()
+    }
+    
+    func applicationWillTerminate(_ notification: Notification) {
+        saveAll()
     }
     
     private var cancellables = Set<AnyCancellable>()
@@ -50,6 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     private func setupHotKeys() {
+        print("SpacePill: setupHotKeys started")
         // 1. Quick Edit Hotkey (Always enabled)
         hotKeyManager.registerHotKey(
             id: 1, 
@@ -63,7 +91,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         
         // 2. Quick Switch Hotkey (Conditional)
         if settingsManager.isQuickSwitchEnabled {
-            // Check permissions when enabled
             checkAccessibilityPermissions()
             
             hotKeyManager.registerHotKey(
@@ -78,6 +105,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         } else {
             hotKeyManager.unregisterHotKey(id: 2)
         }
+
+        // 3. Notes Hotkey (Conditional)
+        if settingsManager.isNotesEnabled {
+            hotKeyManager.registerHotKey(
+                id: 3, 
+                keyCode: settingsManager.notesHotKey.keyCode, 
+                modifiers: settingsManager.notesHotKey.modifiers
+            ) { [weak self] in
+                DispatchQueue.main.async {
+                    self?.statusBarController?.showNotesWindow()
+                }
+            }
+        } else {
+            hotKeyManager.unregisterHotKey(id: 3)
+        }
+        print("SpacePill: setupHotKeys complete")
     }
     
     /**
@@ -89,7 +132,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             let hostingController = NSHostingController(rootView: view)
             
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 480, height: 550),
+                contentRect: NSRect(x: 0, y: 0, width: 550, height: 650),
                 styleMask: [.titled, .closable, .miniaturizable],
                 backing: .buffered,
                 defer: false

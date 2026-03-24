@@ -17,6 +17,7 @@ SpacePill is a lightweight native macOS menu bar application designed help you n
 * Big color-coded pill-style indicator in your menu bar that corresponds to your current Space.
 * Global hot key (default shift+cmd+S) to quickly relabel your current Space.
 * Global hot key (defeault shift+cmd+J) to quickly jump to a Space by fuzzy-typing the target label (or number). 
+* **New:** Global hot key (default shift+cmd+N) to take space-specific Markdown notes. Notes auto-persist and follow you as you switch spaces.
 
 **Why?**
 
@@ -38,6 +39,8 @@ This utility helps me context switch faster and keep my work organized.
 * Quickly navigate to a new space by label or number via global hot key. (Defaul cmd+shift+J)
 
     <img src=".assets/img_2.png" alt="SpacePill">
+
+* **Space Notes:** Take notes specifically for your current space via global hot key. (Default cmd+shift+N). Features Markdown syntax highlighting, auto-indentation for lists, and per-space persistence.
 
 ## 📦 Installation
 
@@ -68,6 +71,7 @@ cd spacepill
 | :--- | :--- |
 | **Quick Edit Space** | `⌘ + ⇧ + S` |
 | **Quick Switch Bar** | `⌘ + ⇧ + J` |
+| **Space Notes** | `⌘ + ⇧ + N` |
 | **Context Menu** | `Right Click` on menu item |
 
 **Permissions:** Note that accessibility permissions will be required for the Quick Switch Bar (System Settings -> Privacy & Security -> Accessibility).
