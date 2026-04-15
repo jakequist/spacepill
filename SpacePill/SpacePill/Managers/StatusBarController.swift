@@ -113,6 +113,11 @@ class StatusBarController: NSObject {
     @objc func showNotesWindow() {
         guard settingsManager.isNotesEnabled else { return }
         
+        // Ensure Quick Switch or Quick Edit is closed
+        if popover?.isShown == true {
+            popover?.performClose(nil)
+        }
+        
         if let window = notesWindow, window.isVisible {
             if window.isKeyWindow {
                 // If already focused, hide it
@@ -186,6 +191,11 @@ class StatusBarController: NSObject {
     }
     
     func showQuickEditDialog() {
+        // Close notes window temporarily
+        if notesWindow?.isVisible == true {
+            notesWindow?.orderOut(nil)
+        }
+        
         if popover == nil {
             popover = NSPopover()
             popover?.behavior = .transient
@@ -213,6 +223,11 @@ class StatusBarController: NSObject {
      * Displays the quick-switch bar (SwiftUI popover) for fuzzy searching and switching spaces.
      */
     func showQuickSwitchBar() {
+        // Close notes window or ensure it loses focus
+        if notesWindow?.isVisible == true {
+            notesWindow?.orderOut(nil)
+        }
+        
         if popover == nil {
             popover = NSPopover()
             popover?.behavior = .transient

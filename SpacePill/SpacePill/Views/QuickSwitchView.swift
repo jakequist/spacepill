@@ -135,6 +135,9 @@ struct QuickSwitchView: View {
     
     private func setupEventMonitor() {
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // Only process events if the quick switch is focused and in the key window
+            guard isFocused, event.window?.isKeyWindow == true else { return event }
+            
             // Key codes: 125=down, 126=up, 36=enter, 53=esc
             switch event.keyCode {
             case 125: // Down

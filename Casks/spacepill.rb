@@ -1,6 +1,6 @@
 cask "spacepill" do
-  version "1.0.4"
-  sha256 "4720c883c7b4ac617a20bcb229c2c5b69b8b459e8522364e3fe576bd63b467c0"
+  version "1.1.0"
+  sha256 "bc33333172c502db46635c88503a56011411e62bdac7564f221f525e51c7de9a"
 
   url "https://github.com/jakequist/spacepill/releases/download/v#{version}/SpacePill.dmg"
   name "SpacePill"
