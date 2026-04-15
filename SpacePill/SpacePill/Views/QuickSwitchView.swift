@@ -126,6 +126,7 @@ struct QuickSwitchView: View {
             setupEventMonitor()
         }
         .onDisappear {
+            print("SpacePill: QuickSwitchView disappearing, removing monitor")
             if let monitor = eventMonitor {
                 NSEvent.removeMonitor(monitor)
                 eventMonitor = nil
@@ -135,8 +136,13 @@ struct QuickSwitchView: View {
     
     private func setupEventMonitor() {
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            // Only process events if the quick switch is focused and in the key window
-            guard isFocused, event.window?.isKeyWindow == true else { return event }
+            // CRITICAL: Only handle events if this view is actually focused and in the key window.
+            // AND ensure the event is targeted at the window containing this view.
+            guard isFocused, 
+                  let keyWindow = NSApp.keyWindow,
+                  event.window == keyWindow else { 
+                return event 
+            }
             
             // Key codes: 125=down, 126=up, 36=enter, 53=esc
             switch event.keyCode {
@@ -161,6 +167,7 @@ struct QuickSwitchView: View {
     private func executeSwitch() {
         guard !filteredMatches.isEmpty else { return }
         let item = filteredMatches[selectedIndex]
+        print("SpacePill: QuickSwitch triggering switch to space \(item.index)")
         SkyLight.switchToSpace(uuid: item.id)
         onDismiss?()
     }

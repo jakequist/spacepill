@@ -5,7 +5,7 @@ import Combine
 /**
  * Manages the SpacePill menu bar item and its associated views.
  */
-class StatusBarController: NSObject {
+class StatusBarController: NSObject, NSPopoverDelegate {
     var statusBarItem: NSStatusItem
     private var popover: NSPopover?
     private var notesWindow: NSWindow?
@@ -27,6 +27,21 @@ class StatusBarController: NSObject {
         setupStatusBarItem()
         setupSpaceObserver()
         setupResizeObserver()
+        
+        // Initialize popover once
+        setupPopover()
+    }
+    
+    private func setupPopover() {
+        popover = NSPopover()
+        popover?.behavior = .transient
+        popover?.delegate = self
+    }
+    
+    func popoverDidClose(_ notification: Notification) {
+        // Critical: Clear content view controller to ensure cleanup and avoid leaked event monitors
+        print("SpacePill: Popover closed, cleaning up content")
+        popover?.contentViewController = nil
     }
     
     private func setupResizeObserver() {
@@ -106,27 +121,24 @@ class StatusBarController: NSObject {
         let quitItem = NSMenuItem(title: "Quit SpacePill", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.addItem(quitItem)
         
-        // Show menu manually to avoid conflicts with mouseDown processing
         statusBarItem.popUpMenu(menu)
     }
     
     @objc func showNotesWindow() {
         guard settingsManager.isNotesEnabled else { return }
         
-        // Ensure Quick Switch or Quick Edit is closed
+        // Ensure popovers are closed first
         if popover?.isShown == true {
             popover?.performClose(nil)
         }
         
         if let window = notesWindow, window.isVisible {
             if window.isKeyWindow {
-                // If already focused, hide it
                 window.orderOut(nil)
                 if let uuid = spaceManager.currentSpaceUUID {
                     settingsManager.setNotesOpen(for: uuid, isOpen: false)
                 }
             } else {
-                // If visible but not focused, focus it
                 window.makeKeyAndOrderFront(nil)
                 NSApp.activate(ignoringOtherApps: true)
             }
@@ -178,27 +190,24 @@ class StatusBarController: NSObject {
         let buttonFrame = button.window?.frame ?? .zero
         let screenFrame = screen.visibleFrame
         
-        // Use the size from the hosting controller's view
         let contentSize = window.contentViewController?.view.fittingSize ?? CGSize(width: 400, height: 100)
         let windowHeight = contentSize.height
         
-        // "starts at our menubar pill UI, and then runs all the way to the right of the screen"
         let windowX = buttonFrame.origin.x
-        let windowY = buttonFrame.origin.y - windowHeight - 5 // Dynamic height + small gap
-        let windowWidth = screenFrame.maxX - windowX - 10 // 10px padding from right
+        let windowY = buttonFrame.origin.y - windowHeight - 5
+        let windowWidth = screenFrame.maxX - windowX - 10
         
         window.setFrame(NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight), display: true, animate: false)
     }
     
     func showQuickEditDialog() {
-        // Close notes window temporarily
         if notesWindow?.isVisible == true {
             notesWindow?.orderOut(nil)
         }
         
-        if popover == nil {
-            popover = NSPopover()
-            popover?.behavior = .transient
+        if popover?.isShown == true {
+            popover?.performClose(nil)
+            return
         }
         
         popover?.contentViewController = NSHostingController(rootView: QuickEditView(
@@ -210,27 +219,19 @@ class StatusBarController: NSObject {
         ))
         
         if let button = statusBarItem.button {
-            if popover?.isShown == true {
-                popover?.performClose(nil)
-            } else {
-                popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-                NSApp.activate(ignoringOtherApps: true)
-            }
+            popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
     
-    /**
-     * Displays the quick-switch bar (SwiftUI popover) for fuzzy searching and switching spaces.
-     */
     func showQuickSwitchBar() {
-        // Close notes window or ensure it loses focus
         if notesWindow?.isVisible == true {
             notesWindow?.orderOut(nil)
         }
         
-        if popover == nil {
-            popover = NSPopover()
-            popover?.behavior = .transient
+        if popover?.isShown == true {
+            popover?.performClose(nil)
+            return
         }
         
         popover?.contentViewController = NSHostingController(rootView: QuickSwitchView(
@@ -242,12 +243,8 @@ class StatusBarController: NSObject {
         ))
         
         if let button = statusBarItem.button {
-            if popover?.isShown == true {
-                popover?.performClose(nil)
-            } else {
-                popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-                NSApp.activate(ignoringOtherApps: true)
-            }
+            popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
 }
@@ -265,10 +262,8 @@ struct MenuBarIndicatorView: View {
                 let isConfigured = config != nil
                 let mainColor = config?.color ?? Color.primary.opacity(0.1)
 
-                // Substantially darker hue for the circle
                 let circleColor = isConfigured ? mainColor.darkened(by: 0.45) : .black.opacity(0.5)
 
-                // Background Capsule
                 Capsule()
                     .fill(mainColor)
                     .overlay(
@@ -276,9 +271,7 @@ struct MenuBarIndicatorView: View {
                             .stroke(Color.black.opacity(isConfigured ? 0.5 : 0.1), lineWidth: 3)
                     )
 
-                // Content
                 ZStack {
-                    // Center-aligned label text
                     if let label = labelText, !label.isEmpty {
                         Text(label.uppercased())
                             .font(.system(size: 11, weight: .bold))
@@ -287,7 +280,6 @@ struct MenuBarIndicatorView: View {
                             .truncationMode(.tail)
                     }
 
-                    // Left-aligned circle badge
                     HStack {
                         Text("\(index)")
                             .font(.system(size: 13, weight: .heavy))
@@ -323,9 +315,6 @@ extension Color {
     }
 }
 
-/**
- * A specialized NSPanel that allows becoming the key window to accept keyboard input.
- */
 class NotesPanel: NSPanel {
     override var canBecomeKey: Bool { return true }
     override var canBecomeMain: Bool { return true }
