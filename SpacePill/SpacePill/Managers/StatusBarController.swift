@@ -139,17 +139,18 @@ class StatusBarController: NSObject, NSPopoverDelegate {
                     settingsManager.setNotesOpen(for: uuid, isOpen: false)
                 }
             } else {
-                window.makeKeyAndOrderFront(nil)
                 NSApp.activate(ignoringOtherApps: true)
+                positionNotesWindow()
+                window.makeKeyAndOrderFront(nil)
             }
             return
         }
         
         ensureNotesWindowExists()
         
+        NSApp.activate(ignoringOtherApps: true)
         positionNotesWindow()
         notesWindow?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
         
         if let uuid = spaceManager.currentSpaceUUID {
             settingsManager.setNotesOpen(for: uuid, isOpen: true)
@@ -184,20 +185,27 @@ class StatusBarController: NSObject, NSPopoverDelegate {
     
     private func positionNotesWindow() {
         guard let button = statusBarItem.button,
-              let window = notesWindow,
-              let screen = NSScreen.main else { return }
-        
-        let buttonFrame = button.window?.frame ?? .zero
-        let screenFrame = screen.visibleFrame
+              let buttonWindow = button.window,
+              let window = notesWindow else { return }
         
         let contentSize = window.contentViewController?.view.fittingSize ?? CGSize(width: 400, height: 100)
-        let windowHeight = contentSize.height
+        let buttonRectInWindow = button.convert(button.bounds, to: nil)
+        let buttonFrame = buttonWindow.convertToScreen(buttonRectInWindow)
+        let screen = buttonWindow.screen ?? NSScreen.screens.first { $0.frame.intersects(buttonFrame) }
+        let screenFrame = screen?.visibleFrame ?? buttonFrame.insetBy(dx: -400, dy: -400)
         
-        let windowX = buttonFrame.origin.x
-        let windowY = buttonFrame.origin.y - windowHeight - 5
-        let windowWidth = screenFrame.maxX - windowX - 10
-        
-        window.setFrame(NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight), display: true, animate: false)
+        let maxWidth = max(320, screenFrame.width - 20)
+        let preferredWidth = screenFrame.maxX - buttonFrame.minX - 10
+        let windowWidth = min(max(preferredWidth, 320), maxWidth)
+        let windowHeight = min(contentSize.height, screenFrame.height - 20)
+        let windowX = min(max(buttonFrame.minX, screenFrame.minX + 10), screenFrame.maxX - windowWidth - 10)
+        let windowY = max(screenFrame.minY + 10, buttonFrame.minY - windowHeight - 5)
+
+        window.setFrame(
+            NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight),
+            display: true,
+            animate: false
+        )
     }
     
     func showQuickEditDialog() {
