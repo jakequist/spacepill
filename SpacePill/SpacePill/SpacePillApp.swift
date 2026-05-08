@@ -10,6 +10,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var statusBarController: StatusBarController?
     
     private var preferencesWindow: NSWindow?
+    private var signalSources: [DispatchSourceSignal] = []
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Prevent multiple instances
@@ -44,6 +45,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private func setupSignalHandlers() {
         let signals = [SIGINT, SIGTERM]
         for sig in signals {
+            signal(sig, SIG_IGN)
+            
             let source = DispatchSource.makeSignalSource(signal: sig, queue: .main)
             source.setEventHandler { [weak self] in
                 print("\nSpacePill: Received signal \(sig), exiting gracefully...")
@@ -51,8 +54,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 NSApp.terminate(nil)
             }
             source.resume()
-            // We need to ignore the default signal handling or it will kill us immediately
-            signal(sig, SIG_IGN)
+            signalSources.append(source)
         }
     }
     
