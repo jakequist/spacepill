@@ -54,10 +54,13 @@ cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/"
 # on every rebuild, so macOS treats each build as a brand new app and drops the
 # Accessibility / Input Monitoring grants. CLAUDE.md explains how to create a
 # self-signed "SpacePill Dev" certificate that keeps those grants stable.
+# Match on the SHA-1 hash rather than the name, and without `-v`: a self-signed
+# certificate is never "valid" in the trust sense, so `find-identity -v` would
+# never list it. codesign does not need trust in order to sign.
 SIGN_IDENTITY="${SPACEPILL_SIGN_IDENTITY:-}"
 if [ -z "$SIGN_IDENTITY" ]; then
-    SIGN_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null \
-        | awk -F'"' '/SpacePill Dev/ {print $2; exit}')
+    SIGN_IDENTITY=$(security find-identity -p codesigning 2>/dev/null \
+        | awk '/"SpacePill Dev"/ {print $2; exit}')
 fi
 
 if [ -n "$SIGN_IDENTITY" ]; then
