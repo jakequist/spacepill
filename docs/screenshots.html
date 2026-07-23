@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screenshots — SpacePill</title>
+<meta name="description" content="A visual tour of SpacePill: the menu bar pill, Quick Edit, the Quick Switch bar, Space Notes, Preferences, and the required macOS keyboard shortcut setup.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./assets/spacepill.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a class="nav__brand" href="./index.html">
+      <span class="pill" aria-hidden="true"><span class="pill__badge">1</span></span>
+      <span>space<b class="nav__mark">pill</b></span>
+    </a>
+    <nav aria-label="Main">
+      <ul class="nav__links">
+        <li><a href="./index.html">Overview</a></li>
+        <li><a href="./docs.html">Documentation</a></li>
+        <li><a href="./screenshots.html" aria-current="page">Screenshots</a></li>
+        <li><a href="https://github.com/jakequist/spacepill">GitHub</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="wrap" style="padding-block: clamp(2.5rem,6vw,4rem) 1rem;">
+    <p class="eyebrow">Visual tour</p>
+    <h1>SpacePill, one screen at a time</h1>
+    <p class="lede">
+      Six surfaces, in the order you'll meet them: the pill, labelling a Space, jumping to
+      one, the notes panel, Preferences, and the one System Settings screen you have to
+      visit yourself.
+    </p>
+  </section>
+
+  <!-- ============ THE PILL ============ -->
+  <section class="section" aria-labelledby="h-pill">
+    <div class="wrap">
+      <h2 id="h-pill"><span class="marker" aria-hidden="true">1</span> The pill</h2>
+      <p class="lede">Where you are, without opening anything.</p>
+
+      <div class="shots" style="margin-top:2rem;">
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="./assets/pill-menubar.png"
+                 width="750" height="62" loading="lazy" decoding="async"
+                 alt="A macOS menu bar. At the left sits a blue capsule with a dark circular badge showing the number 4 and the label SOCIAL in white uppercase, followed by the usual system menu bar icons and the clock.">
+          </div>
+          <figcaption>
+            <strong>The colour-coded pill in the menu bar</strong>
+            The badge is the Space's position across all displays; the text is the label you
+            gave it. The whole capsule takes the colour you assigned, and the badge is a
+            darker shade of it, so it reads clearly against both light and dark menu bars.
+          </figcaption>
+        </figure>
+
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="./assets/pill-variants.png"
+                 width="900" height="260" loading="lazy" decoding="async"
+                 alt="Several SpacePill pills side by side in different colours — blue, red, green, orange, purple and pink — each with a number badge and a short uppercase label, plus one neutral grey pill showing only a number.">
+          </div>
+          <figcaption>
+            <strong>One colour per Space</strong>
+            Seven presets are built in, plus the full system colour picker. A Space you have
+            not configured shows a neutral pill with just its number — SpacePill never
+            invents a label for you.
+          </figcaption>
+        </figure>
+
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="./assets/demo-switch.gif"
+                 width="900" height="120" loading="lazy" decoding="async"
+                 alt="Animation of the menu bar pill changing colour, number and label as the user switches between Spaces.">
+          </div>
+          <figcaption>
+            <strong>It changes as you switch</strong>
+            With Input Monitoring granted, SpacePill notices the
+            <kbd>&#8963;</kbd><kbd>&#8592;</kbd> / <kbd>&#8963;</kbd><kbd>&#8594;</kbd>
+            keypress and updates the pill at the <em>start</em> of the macOS transition
+            animation rather than roughly a second later. Without that permission it still
+            tracks correctly, just a beat behind.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QUICK EDIT ============ -->
+  <section class="section section--tint" aria-labelledby="h-edit">
+    <div class="wrap">
+      <h2 id="h-edit"><span class="marker" aria-hidden="true">2</span> Quick Edit</h2>
+      <p class="lede">
+        <kbd>&#8984;</kbd> <kbd>&#8679;</kbd> <kbd>S</kbd> — name and colour the Space
+        you're on.
+      </p>
+
+      <div class="shots" style="margin-top:2rem;">
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="./assets/quick-edit.png"
+                 width="845" height="274" loading="lazy" decoding="async"
+                 alt="The Quick Edit popover hanging below the menu bar. It is titled Edit Space 4 and contains a text field for the label, a row of seven coloured circles with a colour picker at the end, and Clear and Save buttons.">
+          </div>
+          <figcaption>
+            <strong>Rename and recolour a Space</strong>
+            A text field, seven preset swatches, and the system colour picker for anything
+            else. <kbd>&#9166;</kbd> saves, <kbd>&#9003;</kbd> clears. Open it on an
+            unconfigured Space and SpacePill pre-selects the first preset colour no other
+            Space is using, so a run of new Spaces ends up visually distinct on its own.
+            Labels and colours are stored against the Space's stable UUID, so they survive
+            reordering in Mission Control.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QUICK SWITCH ============ -->
+  <section class="section" aria-labelledby="h-switch">
+    <div class="wrap">
+      <h2 id="h-switch"><span class="marker" aria-hidden="true">3</span> Quick Switch</h2>
+      <p class="lede">
+        <kbd>&#8984;</kbd> <kbd>&#8679;</kbd> <kbd>J</kbd> — jump to a Space by typing part
+        of its name.
+      </p>
+
+      <div class="shots shots--two" style="margin-top:2rem;">
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="./assets/quick-switch.png"
+                 width="864" height="437" loading="lazy" decoding="async"
+                 alt="The Quick Switch bar: a search field reading Switch to space, above a list of Spaces. Each row shows a small coloured circle with the Space number and the Space's label. The selected row is highlighted and shows a return arrow. A footer hint reads up and down to navigate, return to switch, escape to close.">
+          </div>
+          <figcaption>
+            <strong>Every Space, searchable</strong>
+            Filter by label or by exact number, move with <kbd>&#8593;</kbd>
+            <kbd>&#8595;</kbd>, jump with <kbd>&#9166;</kbd>, dismiss with <kbd>esc</kbd>.
+            The list spans every display.
+          </figcaption>
+        </figure>
+
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="./assets/quick-switch-unreachable.png"
+                 width="864" height="437" loading="lazy" decoding="async"
+                 alt="The Quick Switch bar with several rows dimmed and marked with a no-entry symbol. The footer hint is shown in orange, explaining that the selected Space cannot be jumped to.">
+          </div>
+          <figcaption>
+            <strong>Honest about what it can't reach</strong>
+            Rows SpacePill genuinely cannot jump to are dimmed, marked with a no-entry
+            symbol, and refuse to activate — either because that Desktop's
+            &ldquo;Switch to Desktop&nbsp;N&rdquo; shortcut isn't enabled, or because it sits
+            past Desktop&nbsp;10, which macOS defines no shortcut for at all. The footer
+            names the exact reason for the selected row.
+            <a href="./docs.html#required-setup">How to fix the first case &rarr;</a>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NOTES ============ -->
+  <section class="section section--tint" aria-labelledby="h-notes">
+    <div class="wrap">
+      <h2 id="h-notes"><span class="marker" aria-hidden="true">4</span> Space Notes</h2>
+      <p class="lede">
+        <kbd>&#8984;</kbd> <kbd>&#8679;</kbd> <kbd>N</kbd> — a Markdown scratchpad that
+        belongs to this Space.
+      </p>
+
+      <div class="shots" style="margin-top:2rem;">
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="./assets/notes.png"
+                 width="900" height="420" loading="lazy" decoding="async"
+                 alt="A floating translucent notes panel anchored beneath the menu bar, with a coloured border matching the current Space. It contains monospaced Markdown text with a highlighted heading, a bulleted list, bold text and an inline code span.">
+          </div>
+          <figcaption>
+            <strong>Notes that follow the Space</strong>
+            Headings, bold, italics, inline code, fenced blocks and list markers are
+            highlighted as you type, and pressing <kbd>&#9166;</kbd> inside a list continues
+            it automatically. The panel saves continuously, remembers its scroll position per
+            Space, grows with your content up to the height you set, and reappears only on
+            the Spaces where you left it open. Its border can take the Space's colour so you
+            always know whose notes you're reading.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PREFERENCES ============ -->
+  <section class="section" aria-labelledby="h-prefs">
+    <div class="wrap">
+      <h2 id="h-prefs"><span class="marker" aria-hidden="true">5</span> Preferences</h2>
+      <p class="lede">Right-click the pill &rarr; Preferences&hellip;</p>
+
+      <div class="shots" style="margin-top:2rem;">
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="./assets/preferences.png"
+                 width="1100" height="1200" loading="lazy" decoding="async"
+                 alt="The SpacePill Preferences window. A Hotkeys section lists recorder fields for Quick Edit Space, Quick Switch Bar and Space Notes. A General section has toggles for Launch at Login, Enable Quick Switch Bar and Enable Space Notes, plus a notes border toggle and a Max Notes Height slider. Below is a note about Accessibility permissions and a Reset All Space Labels and Colors button.">
+          </div>
+          <figcaption>
+            <strong>All three hotkeys are rebindable</strong>
+            Click a field and press the combination you want. Note that
+            <strong>Quick Switch and Space Notes ship switched off</strong> — their hotkeys
+            are not registered until you tick them here, and their hotkey rows only appear
+            once you do. If no &ldquo;Switch to Desktop&rdquo; shortcut is enabled in macOS,
+            this window also shows a warning with a button that opens the right System
+            Settings pane.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REQUIRED SETUP ============ -->
+  <section class="section section--tint" aria-labelledby="h-setup">
+    <div class="wrap">
+      <h2 id="h-setup"><span class="marker" aria-hidden="true">6</span> The setup step everyone misses</h2>
+
+      <div class="callout callout--critical" style="margin-top:1.4rem;">
+        <p class="callout__title" style="font-size:1.1rem;">
+          <span class="tag">Required</span>
+          These checkboxes are off by default, and Quick Switch is dead without them
+        </p>
+        <p style="margin-bottom:0;">
+          macOS has no API for changing Spaces, so SpacePill replays your own
+          <strong>Switch to Desktop&nbsp;N</strong> shortcuts. Enable them under
+          <span class="path">System&nbsp;Settings &rarr; Keyboard &rarr; Keyboard&nbsp;Shortcuts &rarr; Mission&nbsp;Control</span>,
+          one per Desktop you want to jump to.
+          <a href="./docs.html#required-setup">Full walkthrough &rarr;</a>
+        </p>
+      </div>
+
+      <div class="shots" style="margin-top:2rem;">
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="./assets/setup-shortcuts.png"
+                 width="1200" height="900" loading="lazy" decoding="async"
+                 alt="The macOS Keyboard Shortcuts window with Mission Control selected in the sidebar. The list shows Switch to Desktop 1, Switch to Desktop 2 and so on, each with a checkbox and a Control-plus-number shortcut beside it.">
+          </div>
+          <figcaption>
+            <strong>System Settings &rarr; Keyboard &rarr; Keyboard Shortcuts &rarr; Mission Control</strong>
+            Tick <em>Switch to Desktop&nbsp;1</em>, <em>Switch to Desktop&nbsp;2</em> and so
+            on — one for every Desktop you want to be able to jump to. The default binding is
+            <kbd>&#8963;</kbd> plus the number, but SpacePill reads whatever you actually
+            bound, so rebinding is fine. macOS only defines these for Desktops 1&ndash;10;
+            there is no eleventh, which is why Spaces past the tenth are unreachable.
+          </figcaption>
+        </figure>
+      </div>
+
+      <p style="margin-top:2.4rem;">
+        <a class="btn btn--primary" href="./docs.html">Read the documentation &rarr;</a>
+        <a class="btn btn--ghost" href="./index.html#install">Install SpacePill</a>
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <div class="footer__brand">
+      <p style="margin-bottom:.5em;">
+        <span class="pill" aria-hidden="true"><span class="pill__badge">1</span> SpacePill</span>
+      </p>
+      <p class="small">
+        A native macOS menu bar app for navigating Spaces. MIT licensed.
+      </p>
+    </div>
+    <nav aria-label="Footer">
+      <ul class="stack-sm">
+        <li><a href="./index.html">Overview</a></li>
+        <li><a href="./docs.html">Documentation</a></li>
+        <li><a href="./screenshots.html">Screenshots</a></li>
+        <li><a href="https://github.com/jakequist/spacepill">Source on GitHub</a></li>
+        <li><a href="https://github.com/jakequist/spacepill/releases">Releases</a></li>
+        <li><a href="https://github.com/jakequist/spacepill/issues">Report an issue</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

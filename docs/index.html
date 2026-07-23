@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpacePill — see which macOS Space you're on</title>
+<meta name="description" content="SpacePill is a native macOS menu bar app that shows your current Space as a colour-coded pill, and adds hotkeys to relabel, jump between, and take notes on Spaces.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./assets/spacepill.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a class="nav__brand" href="./index.html">
+      <span class="pill" aria-hidden="true"><span class="pill__badge">1</span></span>
+      <span>space<b class="nav__mark">pill</b></span>
+    </a>
+    <nav aria-label="Main">
+      <ul class="nav__links">
+        <li><a href="./index.html" aria-current="page">Overview</a></li>
+        <li><a href="./docs.html">Documentation</a></li>
+        <li><a href="./screenshots.html">Screenshots</a></li>
+        <li><a href="https://github.com/jakequist/spacepill">GitHub</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="wrap hero__grid">
+      <div>
+        <p class="eyebrow">Native macOS menu bar app · macOS 13+</p>
+        <h1>Always know <span class="grad">which Space</span> you're on.</h1>
+        <p class="lede">
+          SpacePill puts a big, colour-coded pill in your menu bar for the Space you're
+          currently on — then gives you hotkeys to relabel it, jump straight to another
+          one by name, and keep notes that follow each Space around.
+        </p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="#install">Install</a>
+          <a class="btn btn--ghost" href="./docs.html">Read the docs</a>
+          <a class="btn btn--ghost" href="./screenshots.html">See it in action</a>
+        </div>
+      </div>
+
+      <div class="hero__stack">
+        <div class="menubar" role="img" aria-label="A macOS menu bar with a blue SpacePill pill labelled AGENTS, badge number 4, at the left.">
+          <span class="pill pill--lg" style="--pill-color: var(--sp-blue);">
+            <span class="pill__badge">4</span> Agents
+          </span>
+          <span class="menubar__spacer"></span>
+          <span class="menubar__glyphs" aria-hidden="true">
+            <span>&#9679;&#9679;&#9679;</span><span>&#9737;</span><span>&#9835;</span><span>&#9993;</span>
+          </span>
+          <span class="menubar__clock">Mon 9:41&#8239;AM</span>
+        </div>
+
+        <p class="small muted" style="margin:0;">
+          One pill per Space. Give each one a name and a colour, and peripheral
+          vision does the rest.
+        </p>
+
+        <div class="pill-stack" aria-hidden="true">
+          <span class="pill" style="--pill-color: var(--sp-red);"><span class="pill__badge">1</span> Inbox</span>
+          <span class="pill" style="--pill-color: var(--sp-green);"><span class="pill__badge">2</span> Build</span>
+          <span class="pill" style="--pill-color: var(--sp-orange);"><span class="pill__badge">3</span> Review</span>
+          <span class="pill" style="--pill-color: var(--sp-blue);"><span class="pill__badge">4</span> Agents</span>
+          <span class="pill" style="--pill-color: var(--sp-purple);"><span class="pill__badge">5</span> Docs</span>
+          <span class="pill" style="--pill-color: var(--sp-pink);"><span class="pill__badge">6</span> Chat</span>
+          <span class="pill pill--empty" style="--pill-color: var(--sp-gray);"><span class="pill__badge">7</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE BIG SETUP WARNING ============ -->
+  <section class="wrap" style="padding-bottom: clamp(.5rem,2vw,1rem);">
+    <div class="callout callout--critical">
+      <h2 class="callout__title" style="font-size:1.25rem;">
+        <span class="tag">Required setup</span>
+        macOS ships the &ldquo;Switch to Desktop&rdquo; shortcuts turned <em>off</em>
+      </h2>
+      <p>
+        There is no API for changing Spaces on macOS. SpacePill's Quick Switch works by
+        replaying your own <strong>Switch to Desktop&nbsp;N</strong> keyboard shortcuts —
+        and on a stock Mac none of them are bound. Until you turn them on,
+        <strong>Quick Switch cannot move you anywhere at all.</strong>
+      </p>
+      <p style="margin-bottom:.6em;">Enable them once, here:</p>
+      <p>
+        <span class="path">System&nbsp;Settings &rarr; Keyboard &rarr; Keyboard&nbsp;Shortcuts &rarr; Mission&nbsp;Control &rarr; &ldquo;Switch to Desktop&nbsp;1&hellip;N&rdquo;</span>
+      </p>
+      <p style="margin-bottom:0;">
+        Tick a checkbox for every Desktop you want to be able to jump to.
+        <a href="./docs.html#required-setup">Full walkthrough, including why Spaces&nbsp;11+ can never be reached &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ WHY ============ -->
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">Why it exists</p>
+      <h2>Built for running a lot of agents at once</h2>
+      <div class="cards" style="margin-top:1.6rem; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));">
+        <div class="card">
+          <span class="pill" style="--pill-color: var(--sp-blue);" aria-hidden="true"><span class="pill__badge">1</span> Agent A</span>
+          <h3>One agent, one Space</h3>
+          <p>
+            SpacePill was written to make a specific workflow bearable: several coding
+            agents running in parallel, each with its own Space, each doing something
+            different.
+          </p>
+        </div>
+        <div class="card">
+          <span class="pill" style="--pill-color: var(--sp-green);" aria-hidden="true"><span class="pill__badge">2</span> Colour</span>
+          <h3>Colour beats counting</h3>
+          <p>
+            The built-in Spaces indicator is a row of identical grey thumbnails behind a
+            Mission Control gesture. A big coloured pill with a number tells you where you
+            are without thinking about it.
+          </p>
+        </div>
+        <div class="card">
+          <span class="pill" style="--pill-color: var(--sp-purple);" aria-hidden="true"><span class="pill__badge">3</span> Jump</span>
+          <h3>Jump by name, not by position</h3>
+          <p>
+            Type part of a Space's label &mdash; or its number &mdash; and hit
+            <kbd>&#9166;</kbd>. You do not have to remember that &ldquo;the refactor
+            one&rdquo; is the fourth desktop from the left.
+          </p>
+        </div>
+        <div class="card">
+          <span class="pill" style="--pill-color: var(--sp-orange);" aria-hidden="true"><span class="pill__badge">4</span> Notes</span>
+          <h3>Context that stays put</h3>
+          <p>
+            Each Space gets its own Markdown scratchpad. Switch away and it disappears;
+            switch back and it is exactly where you left it, scroll position included.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="section section--tint">
+    <div class="wrap">
+      <p class="eyebrow">Features</p>
+      <h2>Four things, done properly</h2>
+      <p class="lede">Everything is keyboard-first, everything stays on your machine.</p>
+
+      <div class="cards" style="margin-top:2rem; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));">
+        <div class="card">
+          <h3>The pill</h3>
+          <p>
+            A capsule in the menu bar showing the current Space's number badge and its
+            label in caps. Unconfigured Spaces show a neutral pill; if SpacePill can't
+            read the current Space yet it shows <code>?</code> rather than lying to you.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Quick Edit</h3>
+          <p>
+            Rename and recolour the Space you're on from a popover: a text field, seven
+            presets (blue, red, green, orange, purple, pink, grey) and a full colour
+            picker. New Spaces are pre-assigned the first unused preset.
+          </p>
+          <p class="card__key"><kbd>&#8984;</kbd> <kbd>&#8679;</kbd> <kbd>S</kbd></p>
+        </div>
+        <div class="card">
+          <h3>Quick Switch</h3>
+          <p>
+            A search bar over every Space on every display. Filter by label or by exact
+            number, move with <kbd>&#8593;</kbd><kbd>&#8595;</kbd>, jump with
+            <kbd>&#9166;</kbd>. Spaces it genuinely cannot reach are greyed out with the
+            reason, instead of silently doing nothing.
+          </p>
+          <p class="card__key"><kbd>&#8984;</kbd> <kbd>&#8679;</kbd> <kbd>J</kbd></p>
+        </div>
+        <div class="card">
+          <h3>Space Notes</h3>
+          <p>
+            A floating Markdown scratchpad pinned under the pill, with syntax highlighting
+            for headings, bold, italics, code and lists, plus auto-continued list bullets.
+            It saves as you type, and its border can take on the Space's colour.
+          </p>
+          <p class="card__key"><kbd>&#8984;</kbd> <kbd>&#8679;</kbd> <kbd>N</kbd></p>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:2rem;">
+        <table>
+          <caption>Default hotkeys — all three are rebindable in Preferences.</caption>
+          <thead>
+            <tr><th scope="col">Action</th><th scope="col">Shortcut</th><th scope="col">Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Quick Edit Space</th>
+              <td><kbd>&#8984;</kbd> <kbd>&#8679;</kbd> <kbd>S</kbd></td>
+              <td>Always on. Also opens on a left-click of the pill.</td>
+            </tr>
+            <tr>
+              <th scope="row">Quick Switch Bar</th>
+              <td><kbd>&#8984;</kbd> <kbd>&#8679;</kbd> <kbd>J</kbd></td>
+              <td>Off until you enable it in Preferences.</td>
+            </tr>
+            <tr>
+              <th scope="row">Space Notes</th>
+              <td><kbd>&#8984;</kbd> <kbd>&#8679;</kbd> <kbd>N</kbd></td>
+              <td>Off until you enable it in Preferences.</td>
+            </tr>
+            <tr>
+              <th scope="row">Context menu</th>
+              <td>Right-click the pill</td>
+              <td>Preferences and Quit.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INSTALL ============ -->
+  <section class="section" id="install">
+    <div class="wrap">
+      <p class="eyebrow">Install</p>
+      <h2>Two ways in</h2>
+
+      <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-top:1.6rem;">
+        <div class="card">
+          <h3 style="margin-top:0;">Homebrew</h3>
+          <div class="codeblock">
+            <div class="codeblock__label">Terminal</div>
+<pre><code>brew tap jakequist/spacepill https://github.com/jakequist/spacepill
+brew install spacepill</code></pre>
+          </div>
+          <p>Installs <code>SpacePill.app</code> into <code>/Applications</code>.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0;">Direct download</h3>
+          <p>
+            Grab the signed and notarised <code>SpacePill.dmg</code> from the releases
+            page and drag it to Applications.
+          </p>
+          <p style="margin-top:1.1rem;">
+            <a class="btn btn--primary" href="https://github.com/jakequist/spacepill/releases">Latest release &rarr;</a>
+          </p>
+        </div>
+      </div>
+
+      <h3>Or build it yourself</h3>
+      <div class="codeblock">
+        <div class="codeblock__label">Terminal</div>
+<pre><code>git clone https://github.com/jakequist/spacepill.git
+cd spacepill
+./bin/start.sh</code></pre>
+      </div>
+      <p class="small muted">
+        Requires Xcode command line tools. <code>start.sh</code> builds, assembles a
+        signed <code>.app</code> bundle and launches it — running the bare SwiftPM
+        binary will not work correctly.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ GETTING STARTED ============ -->
+  <section class="section section--tint">
+    <div class="wrap">
+      <p class="eyebrow">Getting started</p>
+      <h2>Five minutes, once</h2>
+      <p class="lede">Step&nbsp;3 is the one everybody misses. Don't skip it.</p>
+
+      <ol class="steps">
+        <li>
+          <h3>Launch SpacePill</h3>
+          <p>
+            It has no Dock icon and no window — look for the pill in the menu bar. If it
+            shows <code>?</code>, switch Spaces once to wake up detection.
+          </p>
+        </li>
+        <li>
+          <h3>Grant the permissions it asks for</h3>
+          <p>
+            <strong>Accessibility</strong> lets SpacePill post the keystrokes that change
+            Spaces. <strong>Input Monitoring</strong> only makes the pill update the
+            instant a switch begins. Both live under System&nbsp;Settings &rarr;
+            Privacy&nbsp;&amp;&nbsp;Security.
+            <a href="./docs.html#permissions">What breaks without each &rarr;</a>
+          </p>
+        </li>
+        <li class="step--alert">
+          <h3>Turn on the &ldquo;Switch to Desktop&rdquo; shortcuts &mdash; they are off by default</h3>
+          <p>
+            Open <span class="path">System&nbsp;Settings &rarr; Keyboard &rarr; Keyboard&nbsp;Shortcuts &rarr; Mission&nbsp;Control</span>
+            and tick <strong>Switch to Desktop&nbsp;1</strong> through however many
+            Desktops you use. SpacePill drives these shortcuts; with none of them enabled
+            Quick Switch is inert, no matter what permissions you have granted.
+          </p>
+          <p style="margin-bottom:0;">
+            macOS only defines them for Desktops&nbsp;1&ndash;10, so Spaces&nbsp;11 and
+            beyond can never be jumped to.
+            <a href="./docs.html#required-setup">Details &rarr;</a>
+          </p>
+        </li>
+        <li>
+          <h3>Enable Quick Switch and Space Notes</h3>
+          <p>
+            Right-click the pill &rarr; <strong>Preferences&hellip;</strong> Both features
+            ship switched off; their hotkeys are not registered until you turn them on.
+          </p>
+        </li>
+        <li>
+          <h3>Name your Spaces</h3>
+          <p>
+            Go to a Space, press <kbd>&#8984;</kbd> <kbd>&#8679;</kbd> <kbd>S</kbd>, type
+            a label, pick a colour, <kbd>&#9166;</kbd>. Repeat. Labels and colours are
+            stored against the Space's UUID, so they survive reordering.
+          </p>
+        </li>
+      </ol>
+
+      <p style="margin-top:2rem;">
+        <a class="btn btn--primary" href="./docs.html">Full documentation &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ PRIVACY ============ -->
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">Privacy</p>
+      <h2>Nothing leaves your Mac</h2>
+      <p class="lede">
+        SpacePill has no telemetry, no accounts and no network code. Labels, colours,
+        settings and notes are plain files in <code>~/.spacepill/</code>. It is a single
+        SwiftPM executable with no third-party dependencies, released under the MIT
+        licence.
+      </p>
+      <p>
+        <a href="./docs.html#settings-file">See exactly what it writes to disk &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <div class="footer__brand">
+      <p style="margin-bottom:.5em;">
+        <span class="pill" aria-hidden="true"><span class="pill__badge">1</span> SpacePill</span>
+      </p>
+      <p class="small">
+        A native macOS menu bar app for navigating Spaces. MIT licensed.
+      </p>
+    </div>
+    <nav aria-label="Footer">
+      <ul class="stack-sm">
+        <li><a href="./index.html">Overview</a></li>
+        <li><a href="./docs.html">Documentation</a></li>
+        <li><a href="./screenshots.html">Screenshots</a></li>
+        <li><a href="https://github.com/jakequist/spacepill">Source on GitHub</a></li>
+        <li><a href="https://github.com/jakequist/spacepill/releases">Releases</a></li>
+        <li><a href="https://github.com/jakequist/spacepill/issues">Report an issue</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
