@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-# Create a self-signed "SpacePill Dev" code signing certificate.
+# Create a self-signed "SpacePill Dev" code signing identity in a dedicated,
+# non-interactive keychain.
 #
 # WHY YOU WANT THIS
 #   SpacePill needs Accessibility and Input Monitoring permission. macOS keys
@@ -11,65 +12,108 @@
 #
 #   Signing with a stable certificate instead means you approve once, ever.
 #
+# WHY A SEPARATE KEYCHAIN
+#   The login keychain requires user authorisation to release a private key, and
+#   that authorisation cannot be granted from a background/SSH session -- exactly
+#   where builds tend to run. Instead this creates a throwaway keychain holding
+#   nothing but the dev certificate, with a random password stored 0600 at
+#   ~/.spacepill/dev-keychain-password, which bin/start.sh unlocks automatically.
+#   Your login keychain is never touched.
+#
+#   Trade-off: anything running as your user can read that password and sign as
+#   "SpacePill Dev", inheriting SpacePill's permission grants. That is not much
+#   of an escalation -- code running as you could tamper with the app anyway --
+#   but it is the reason this is a dev-only tool. Never ship with this identity.
+#
 # USAGE
 #   ./bin/dev-cert.sh          create the identity (idempotent)
 #   ./bin/dev-cert.sh --check  report on the existing identity and exit
 #
-#   Prompts for your login keychain password, so run it yourself in a terminal.
-#   Works fine over SSH. Run it once per machine; afterwards bin/start.sh picks
-#   the identity up automatically.
+#   Fully non-interactive. No password prompts, works over SSH.
 #
 # TO UNDO
-#   security delete-identity -c "SpacePill Dev" ~/Library/Keychains/login.keychain-db
+#   security delete-keychain ~/Library/Keychains/spacepill-dev.keychain-db
+#   rm ~/.spacepill/dev-keychain-password
 
 set -euo pipefail
 
 CN="SpacePill Dev"
-KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
+KEYCHAIN="$HOME/Library/Keychains/spacepill-dev.keychain-db"
+KEYCHAIN_SHORT="spacepill-dev.keychain"
+PASSWORD_FILE="$HOME/.spacepill/dev-keychain-password"
+
 WORKDIR=$(mktemp -d)
 trap 'rm -rf "$WORKDIR"' EXIT
 
-# Does an identity with this name exist at all? Note: `find-identity -v` lists
-# only *trusted* identities, and a self-signed cert is never trusted, so
-# checking with -v here would rebuild the cert on every run and pile up
-# duplicates in the keychain.
+# `find-identity -v` lists only *trusted* identities, and a self-signed cert is
+# never trusted, so the check must not use -v.
 identity_hash() {
+    [ -f "$KEYCHAIN" ] || return 0
     security find-identity -p codesigning "$KEYCHAIN" 2>/dev/null \
         | awk -v cn="\"$CN\"" '$0 ~ cn {print $2; exit}'
 }
 
-# codesign refuses to use a key it cannot read, so proving the identity works
-# means actually signing something with it.
+# codesign refuses to use a key it cannot read, so the only honest test is to
+# actually sign something.
 test_sign() {
     local hash="$1"
     local probe="$WORKDIR/probe"
     cp /usr/bin/true "$probe"
-    codesign --force --sign "$hash" "$probe" >/dev/null 2>&1
+    codesign --force --sign "$hash" --keychain "$KEYCHAIN" "$probe" >/dev/null 2>&1
+}
+
+unlock() {
+    security unlock-keychain -p "$(cat "$PASSWORD_FILE")" "$KEYCHAIN"
 }
 
 if [ "${1:-}" = "--check" ]; then
+    if [ ! -f "$KEYCHAIN" ] || [ ! -f "$PASSWORD_FILE" ]; then
+        echo "❌ No dev signing keychain found. Run ./bin/dev-cert.sh"
+        exit 1
+    fi
+    unlock
     HASH=$(identity_hash)
     if [ -z "$HASH" ]; then
-        echo "❌ No '$CN' identity found. Run ./bin/dev-cert.sh"
+        echo "❌ Keychain exists but holds no '$CN' identity. Re-run ./bin/dev-cert.sh"
         exit 1
     fi
     if test_sign "$HASH"; then
-        echo "✅ '$CN' ($HASH) is present and can sign."
+        echo "✅ '$CN' ($HASH) is present and can sign non-interactively."
     else
-        echo "⚠️  '$CN' exists but codesign cannot use its private key."
-        echo "   Re-run ./bin/dev-cert.sh to repair the key partition list."
+        echo "❌ '$CN' exists but codesign cannot use its private key."
         exit 1
     fi
     exit 0
 fi
 
-# Ask once and reuse: unlock-keychain and set-key-partition-list both need it,
-# and set-key-partition-list cannot fall back to an interactive prompt.
-printf "🔑 Login keychain password: "
-read -rs KEYCHAIN_PASSWORD
-echo
+mkdir -p "$(dirname "$PASSWORD_FILE")"
 
-security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+if [ ! -f "$PASSWORD_FILE" ]; then
+    # openssl rand rather than `tr </dev/urandom | head`: under `set -o pipefail`
+    # head closing the pipe kills tr with SIGPIPE and takes the script with it.
+    umask 077
+    openssl rand -hex 24 > "$PASSWORD_FILE"
+fi
+chmod 600 "$PASSWORD_FILE"
+KEYCHAIN_PASSWORD=$(cat "$PASSWORD_FILE")
+
+if [ ! -f "$KEYCHAIN" ]; then
+    echo "🔐 Creating dedicated signing keychain..."
+    security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_SHORT"
+fi
+
+# No auto-lock: relocking would break unattended builds, and this keychain
+# holds nothing but a local dev certificate.
+security set-keychain-settings "$KEYCHAIN"
+unlock
+
+# Keep it on the search list so plain `codesign -s "SpacePill Dev"` and
+# `find-identity` resolve without an explicit --keychain.
+if ! security list-keychains -d user | grep -q "$KEYCHAIN_SHORT"; then
+    EXISTING=$(security list-keychains -d user | sed 's/[" ]//g')
+    # shellcheck disable=SC2086
+    security list-keychains -d user -s $EXISTING "$KEYCHAIN"
+fi
 
 HASH=$(identity_hash)
 
@@ -101,9 +145,9 @@ EOF
         -passout pass:spacepill \
         -legacy -certpbe PBE-SHA1-3DES -keypbe PBE-SHA1-3DES -macalg sha1 2>/dev/null
 
-    echo "📥 Importing into login keychain..."
+    echo "📥 Importing into the signing keychain..."
     security import "$WORKDIR/dev.p12" -k "$KEYCHAIN" -P spacepill \
-        -T /usr/bin/codesign -T /usr/bin/security
+        -T /usr/bin/codesign -T /usr/bin/security -A
 
     HASH=$(identity_hash)
     if [ -z "$HASH" ]; then
@@ -112,9 +156,9 @@ EOF
     fi
 fi
 
-# Without this, codesign gets errSecInternalComponent: it can see the key but
-# is not on its ACL. This is the step that actually makes signing work -- it
-# needs the real password, which is why we prompted for it above.
+# Without this codesign gets errSecInternalComponent: it can see the key but is
+# not on its ACL. Unlike the login keychain, we know this password, so it can
+# be set without any prompt.
 echo "🔓 Granting codesign access to the private key..."
 security set-key-partition-list -S apple-tool:,apple:,codesign: \
     -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null 2>&1 \
@@ -127,14 +171,13 @@ if test_sign "$HASH"; then
     echo "   Grant Accessibility + Input Monitoring once and the grants will stick"
     echo "   across rebuilds."
     echo
-    echo "   Note: the certificate is intentionally left untrusted. codesign does"
-    echo "   not require trust to sign, and marking it trusted needs a GUI"
-    echo "   authorisation dialog that cannot appear over SSH."
+    if security find-identity -p codesigning "$HOME/Library/Keychains/login.keychain-db" 2>/dev/null | grep -q "$CN"; then
+        echo "   FYI an older '$CN' cert is still sitting in your login keychain from"
+        echo "   an earlier attempt. It is unused; remove it whenever convenient with:"
+        echo "     security delete-identity -c \"$CN\" ~/Library/Keychains/login.keychain-db"
+    fi
 else
     echo
-    echo "❌ codesign still cannot use the key."
-    echo "   Most likely the keychain re-locked or the password was wrong."
-    echo "   Try again, or run this in a GUI terminal session:"
-    echo "     security set-key-partition-list -S apple-tool:,apple:,codesign: -s '$KEYCHAIN'"
+    echo "❌ codesign still cannot use the key. Check the output above."
     exit 1
 fi

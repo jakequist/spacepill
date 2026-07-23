@@ -10,6 +10,10 @@ struct QuickSwitchView: View {
     @FocusState private var isFocused: Bool
     
     @State private var eventMonitor: Any?
+
+    /// Seeded at construction so the first render is already correct, then
+    /// refreshed on appear to catch changes made while SpacePill was running.
+    @State private var reachableDesktops: Set<Int> = SpaceShortcuts.reachableDesktops()
     
     struct MatchItem: Identifiable {
         let id: String // UUID
@@ -17,15 +21,31 @@ struct QuickSwitchView: View {
         let label: String?
         let color: Color?
 
-        /// False for Desktop 11+, which macOS provides no way to jump to.
-        var isReachable: Bool { SkyLight.canSwitchToSpace(index: index) }
+        /// Resolved when the list is built, from view state -- not queried live,
+        /// so that re-reading System Settings actually re-renders the rows.
+        let isReachable: Bool
+
+        /// Why this space can't be jumped to, for the footer hint.
+        var unreachableReason: String? {
+            guard !isReachable else { return nil }
+            if index > SkyLight.maxSwitchableSpaceIndex {
+                return "Can't jump here — macOS has no shortcut past Desktop \(SkyLight.maxSwitchableSpaceIndex)"
+            }
+            return "Enable “Switch to Desktop \(index)” in Keyboard Shortcuts to jump here"
+        }
     }
 
     private var filteredMatches: [MatchItem] {
         let allSpaces = SkyLight.getAllSpacesMetadata()
         let items = allSpaces.map { metadata in
             let config = settingsManager.spaceConfigs[metadata.uuid]
-            return MatchItem(id: metadata.uuid, index: metadata.index, label: config?.label, color: config?.color)
+            return MatchItem(
+                id: metadata.uuid,
+                index: metadata.index,
+                label: config?.label,
+                color: config?.color,
+                isReachable: reachableDesktops.contains(metadata.index)
+            )
         }
         
         if searchText.isEmpty {
@@ -118,10 +138,10 @@ struct QuickSwitchView: View {
             
             // Helper Hint
             HStack {
-                if let selected = selectedItem, !selected.isReachable {
+                if let reason = selectedItem?.unreachableReason {
                     // Keep this to one line: the popover height is fixed, and a
                     // wrapped hint crowds the last row of the list.
-                    Text("Can't jump here — macOS has no shortcut past Desktop \(SkyLight.maxSwitchableSpaceIndex)")
+                    Text(reason)
                         .font(.system(size: 10))
                         .foregroundColor(.orange)
                         .lineLimit(1)
@@ -138,6 +158,10 @@ struct QuickSwitchView: View {
         .frame(width: 400)
         .background(VisualEffectView(material: .hudWindow, blendingMode: .behindWindow).ignoresSafeArea())
         .onAppear {
+            // Re-read System Settings so shortcuts enabled since launch are
+            // reflected without restarting SpacePill.
+            SpaceShortcuts.refresh()
+            reachableDesktops = SpaceShortcuts.reachableDesktops()
             selectedIndex = 0
             isFocused = true
             setupEventMonitor()

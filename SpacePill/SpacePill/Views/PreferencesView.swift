@@ -4,7 +4,11 @@ import Carbon
 struct PreferencesView: View {
     @ObservedObject var settingsManager: SettingsManager
     @ObservedObject var hotKeyManager: GlobalHotKeyManager
-    
+
+    /// Re-read on appear so enabling a shortcut in System Settings clears the
+    /// warning without restarting SpacePill.
+    @State private var hasDesktopShortcuts = SpaceShortcuts.hasAnyShortcuts
+
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -72,6 +76,39 @@ struct PreferencesView: View {
                     
                     // Permissions & Maintenance
                     VStack(alignment: .leading, spacing: 12) {
+                        // Switching works by replaying the user's own "Switch to
+                        // Desktop N" shortcuts, which macOS ships disabled. Without
+                        // them the Quick Switch Bar silently does nothing, so say so
+                        // rather than letting it look broken.
+                        if settingsManager.isQuickSwitchEnabled && !hasDesktopShortcuts {
+                            GroupBox {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Label("Quick Switch can't change Spaces yet", systemImage: "exclamationmark.triangle.fill")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.orange)
+
+                                    Text("macOS has no API for switching Spaces, so SpacePill replays your “Switch to Desktop” shortcuts — and those are turned off by default.")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+
+                                    Button("Open Keyboard Shortcuts…") {
+                                        NSWorkspace.shared.open(
+                                            URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension")!
+                                        )
+                                    }
+                                    .buttonStyle(.bordered)
+
+                                    Text("Enable Mission Control → “Switch to Desktop 1…N”, then reopen the Quick Switch Bar.")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(8)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+
                         Text("Note: Switching spaces requires Accessibility permissions to simulate keyboard shortcuts.")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -101,5 +138,18 @@ struct PreferencesView: View {
             .background(VisualEffectView(material: .contentBackground, blendingMode: .withinWindow))
         }
         .frame(width: 550, height: 600)
+        .onAppear(perform: refreshDesktopShortcuts)
+        .onReceive(NotificationCenter.default.publisher(
+            for: NSApplication.didBecomeActiveNotification
+        )) { _ in
+            // Catches the common flow: open Keyboard Shortcuts, enable one,
+            // switch back here.
+            refreshDesktopShortcuts()
+        }
+    }
+
+    private func refreshDesktopShortcuts() {
+        SpaceShortcuts.refresh()
+        hasDesktopShortcuts = SpaceShortcuts.hasAnyShortcuts
     }
 }

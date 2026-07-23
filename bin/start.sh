@@ -57,17 +57,25 @@ cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/"
 # Match on the SHA-1 hash rather than the name, and without `-v`: a self-signed
 # certificate is never "valid" in the trust sense, so `find-identity -v` would
 # never list it. codesign does not need trust in order to sign.
+DEV_KEYCHAIN="$HOME/Library/Keychains/spacepill-dev.keychain-db"
+DEV_KEYCHAIN_PASSWORD_FILE="$HOME/.spacepill/dev-keychain-password"
+
 SIGN_IDENTITY="${SPACEPILL_SIGN_IDENTITY:-}"
-if [ -z "$SIGN_IDENTITY" ]; then
-    SIGN_IDENTITY=$(security find-identity -p codesigning 2>/dev/null \
+if [ -z "$SIGN_IDENTITY" ] && [ -f "$DEV_KEYCHAIN" ] && [ -f "$DEV_KEYCHAIN_PASSWORD_FILE" ]; then
+    # Unlock first: a locked keychain fails with errSecInternalComponent, which
+    # reads like a permissions problem rather than a lock.
+    security unlock-keychain -p "$(cat "$DEV_KEYCHAIN_PASSWORD_FILE")" "$DEV_KEYCHAIN" 2>/dev/null || true
+    SIGN_IDENTITY=$(security find-identity -p codesigning "$DEV_KEYCHAIN" 2>/dev/null \
         | awk '/"SpacePill Dev"/ {print $2; exit}')
 fi
 
 if [ -n "$SIGN_IDENTITY" ]; then
     echo "🔏 Signing as: $SIGN_IDENTITY"
-    codesign --force --options runtime --sign "$SIGN_IDENTITY" "$APP_BUNDLE"
+    codesign --force --options runtime --sign "$SIGN_IDENTITY" \
+        --keychain "$DEV_KEYCHAIN" "$APP_BUNDLE"
 else
     echo "🔏 Signing ad-hoc (permissions must be re-granted after each rebuild)"
+    echo "   Run ./bin/dev-cert.sh once to make them stick."
     codesign --force --sign - "$APP_BUNDLE"
 fi
 

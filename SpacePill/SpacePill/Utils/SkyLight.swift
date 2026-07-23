@@ -71,45 +71,42 @@ class SkyLight {
     }
 
     /**
-     * The highest space index SpacePill can jump to directly.
+     * The highest space index that could ever be jumped to.
      *
-     * There is no API to activate a space, so switching means simulating the
-     * user's own "Switch to Desktop N" shortcut. macOS only defines ten of
-     * those -- Ctrl+1..Ctrl+9 and Ctrl+0 for Desktop 10 (symbolic hotkey IDs
-     * 118...127). Nothing above Desktop 10 is addressable.
+     * macOS only defines "Switch to Desktop N" shortcuts for the first ten
+     * desktops (symbolic hotkey IDs 118...127), and there is no API to activate a
+     * space directly, so nothing beyond Desktop 10 is addressable at all.
      *
-     * Stepping there with Ctrl+Left/Right is technically possible but was
-     * removed: each transition takes roughly half a second and swallows any
+     * Being within this range is necessary but *not* sufficient -- the shortcut
+     * also has to be enabled. Use `canSwitchToSpace(index:)`.
+     *
+     * Stepping past Desktop 10 with Ctrl+Left/Right is technically possible but
+     * was removed: each transition takes roughly half a second and swallows any
      * arrow key posted while it is in flight, so a multi-step hop lands
      * somewhere arbitrary. Refusing is more useful than guessing.
      */
-    static let maxSwitchableSpaceIndex = 10
-
-    /// Ctrl+<number> virtual key codes for Desktop 1...10 (Desktop 10 is Ctrl+0).
-    private static let switchKeyCodes: [Int: UInt16] = [
-        1: 18, 2: 19, 3: 20, 4: 21, 5: 23,
-        6: 22, 7: 26, 8: 28, 9: 25, 10: 29
-    ]
+    static let maxSwitchableSpaceIndex = SpaceShortcuts.maxDesktop
 
     /**
      * Whether `switchToSpace` can actually reach this index.
-     * Callers should check this before offering a space as a jump target.
+     *
+     * False when the space is past Desktop 10, and also when the user has no
+     * "Switch to Desktop N" shortcut bound for it -- which is the default on a
+     * stock macOS install. Callers should check this before offering a space as
+     * a jump target rather than posting keystrokes that go nowhere.
      */
     static func canSwitchToSpace(index: Int) -> Bool {
-        index >= 1 && index <= maxSwitchableSpaceIndex
+        guard index >= 1 && index <= maxSwitchableSpaceIndex else { return false }
+        return SpaceShortcuts.shortcut(forDesktop: index) != nil
     }
 
     /**
-     * Switches the system to the specified space index using simulated keypresses.
-     * This triggers the native macOS transition and avoids visual glitches.
+     * Switches the system to the specified space index by replaying the user's
+     * own "Switch to Desktop N" shortcut. This triggers the native macOS
+     * transition and avoids visual glitches.
      *
-     * Also requires the matching "Switch to Desktop N" shortcut to be enabled in
-     * System Settings -> Keyboard -> Keyboard Shortcuts -> Mission Control. That
-     * cannot be detected reliably, so a switch that silently does nothing is
-     * usually a disabled shortcut rather than a failure here.
-     *
-     * - Returns: `false` if the space does not exist or is out of reach, in
-     *   which case no events are posted.
+     * - Returns: `false` if the space does not exist or has no usable shortcut,
+     *   in which case no events are posted.
      */
     @discardableResult
     static func switchToSpace(index: Int) -> Bool {
@@ -119,25 +116,29 @@ class SkyLight {
             return false
         }
 
-        guard let keyCode = switchKeyCodes[index] else {
+        guard index <= maxSwitchableSpaceIndex else {
             Log.spaces.notice("Space \(index, privacy: .public) is beyond Desktop \(maxSwitchableSpaceIndex, privacy: .public); macOS defines no shortcut for it, not switching")
+            return false
+        }
+
+        guard let shortcut = SpaceShortcuts.shortcut(forDesktop: index) else {
+            Log.spaces.notice("No 'Switch to Desktop \(index, privacy: .public)' shortcut is enabled in System Settings; not switching")
             return false
         }
 
         let source = CGEventSource(stateID: .hidSystemState)
 
-        // Create Control + [Number] events
-        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true)
-        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false)
+        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: shortcut.keyCode, keyDown: true)
+        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: shortcut.keyCode, keyDown: false)
 
-        keyDown?.flags = .maskControl
-        keyUp?.flags = .maskControl
+        keyDown?.flags = shortcut.modifiers
+        keyUp?.flags = shortcut.modifiers
 
         // Post events to the system
         keyDown?.post(tap: .cghidEventTap)
         keyUp?.post(tap: .cghidEventTap)
 
-        Log.spaces.info("Triggered switch to space \(index, privacy: .public) via Ctrl+\(index % 10, privacy: .public)")
+        Log.spaces.info("Triggered switch to space \(index, privacy: .public) via keyCode=\(shortcut.keyCode, privacy: .public) modifiers=\(shortcut.modifiers.rawValue, privacy: .public)")
         return true
     }
     
