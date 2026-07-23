@@ -10,10 +10,13 @@
 	<string>AppIcon</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<key>CFBundleExecutable</key>
+	<string>SpacePill</string>
+	<!-- Both version strings are rewritten from ./VERSION by bin/package.sh. -->
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
+	<string>0.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>0.0.0</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
 	<key>LSUIElement</key>

@@ -57,7 +57,7 @@ struct QuickEditView: View {
             HStack {
                 Button("Clear") {
                     if let uuid = spaceManager.currentSpaceUUID {
-                        print("SpacePill: Clear button clicked for space \(uuid)")
+                        Log.ui.info("Clearing config for space \(uuid, privacy: .public)")
                         settingsManager.clearConfig(for: uuid)
                         onDismiss?()
                     }
@@ -68,7 +68,7 @@ struct QuickEditView: View {
                 
                 Button("Save") {
                     if let uuid = spaceManager.currentSpaceUUID {
-                        print("SpacePill: Save button clicked for space \(uuid)")
+                        Log.ui.info("Saving config for space \(uuid, privacy: .public)")
                         settingsManager.setConfig(for: uuid, label: label, hexColor: selectedColor.toHex())
                         onDismiss?()
                     }

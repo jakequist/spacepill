@@ -7,12 +7,17 @@ cask "spacepill" do
   desc "Native macOS menu bar indicator for virtual desktops (Spaces)"
   homepage "https://github.com/jakequist/spacepill"
 
+  depends_on macos: ">= :ventura"
+
   app "SpacePill.app"
 
-  uninstall quit: "com.jakequist.SpacePill"
+  # Must match CFBundleIdentifier in SpacePill/SpacePill/Resources/Info.plist.
+  uninstall quit: "com.jake.SpacePill"
 
+  # SpacePill keeps settings and per-space notes in ~/.spacepill; the
+  # Preferences plist only lingers for users who predate that migration.
   zap trash: [
-    "~/Library/Application Support/SpacePill",
+    "~/.spacepill",
     "~/Library/Preferences/com.jake.SpacePill.plist",
   ]
 end

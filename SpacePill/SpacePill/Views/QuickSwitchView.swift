@@ -126,7 +126,7 @@ struct QuickSwitchView: View {
             setupEventMonitor()
         }
         .onDisappear {
-            print("SpacePill: QuickSwitchView disappearing, removing monitor")
+            Log.ui.debug("QuickSwitchView disappearing, removing key monitor")
             if let monitor = eventMonitor {
                 NSEvent.removeMonitor(monitor)
                 eventMonitor = nil
@@ -167,7 +167,7 @@ struct QuickSwitchView: View {
     private func executeSwitch() {
         guard !filteredMatches.isEmpty else { return }
         let item = filteredMatches[selectedIndex]
-        print("SpacePill: QuickSwitch triggering switch to space \(item.index)")
+        Log.ui.info("QuickSwitch requesting switch to space \(item.index, privacy: .public)")
         SkyLight.switchToSpace(uuid: item.id)
         onDismiss?()
     }

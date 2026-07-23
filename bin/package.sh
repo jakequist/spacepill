@@ -4,10 +4,13 @@ set -eo pipefail
 
 # Configuration
 APP_NAME="SpacePill"
-BUNDLE_ID="com.jakequist.spacepill"
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION=$(cat "$PROJECT_DIR/VERSION")
-BUILD_NUMBER="1"
+# Canonical bundle identifier. Read from Info.plist so there is exactly one
+# source of truth -- changing it would invalidate every existing user's
+# Accessibility / Input Monitoring grants and their Launch-at-Login item.
+BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" \
+    "$PROJECT_DIR/SpacePill/SpacePill/Resources/Info.plist")
 BUILD_DIR="$PROJECT_DIR/SpacePill/.build/release"
 STAGING_DIR="$PROJECT_DIR/staging"
 APP_BUNDLE="$STAGING_DIR/$APP_NAME.app"
@@ -27,6 +30,11 @@ swift build -c release
 # 3. Create .app structure
 cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
 cp "$PROJECT_DIR/SpacePill/SpacePill/Resources/Info.plist" "$APP_BUNDLE/Contents/"
+
+# Stamp the version from ./VERSION so the bundle never drifts from the repo.
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP_BUNDLE/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$APP_BUNDLE/Contents/Info.plist"
+echo "🏷  Stamped $BUNDLE_ID v$VERSION"
 
 # 4. Handle Icon
 cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/"

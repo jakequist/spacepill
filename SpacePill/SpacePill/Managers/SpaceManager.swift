@@ -25,7 +25,7 @@ class SpaceManager: ObservableObject {
     private var keyboardEventTapSource: CFRunLoopSource?
     
     init() {
-        print("SpacePill: SpaceManager initializing")
+        Log.spaces.debug("SpaceManager initializing")
         updateSpaces()
         setupNotificationObserver()
         setupSpaceSwitchEventTap()
@@ -63,7 +63,8 @@ class SpaceManager: ObservableObject {
             callback: spaceSwitchEventCallback,
             userInfo: refcon
         ) else {
-            print("SpacePill: Failed to create space switch event tap")
+            // Almost always means Input Monitoring has not been granted.
+            Log.spaces.error("Failed to create space switch event tap (check Input Monitoring permission)")
             return
         }
         
@@ -101,7 +102,7 @@ class SpaceManager: ObservableObject {
         DispatchQueue.main.async {
             guard self.visualSpaceIndex != target.index || self.visualSpaceUUID != target.uuid else { return }
             
-            print("SpacePill: Optimistic visual space update - Index: \(target.index), UUID: \(target.uuid)")
+            Log.spaces.debug("Optimistic visual space update index=\(target.index, privacy: .public) uuid=\(target.uuid, privacy: .public)")
             self.visualSpaceIndex = target.index
             self.visualSpaceUUID = target.uuid
         }
@@ -117,7 +118,7 @@ class SpaceManager: ObservableObject {
                 metadata.index != currentSpaceIndex ||
                 metadata.uuid != visualSpaceUUID ||
                 metadata.index != visualSpaceIndex {
-                print("SpacePill: Space updated - Index: \(metadata.index), UUID: \(metadata.uuid)")
+                Log.spaces.debug("Space updated index=\(metadata.index, privacy: .public) uuid=\(metadata.uuid, privacy: .public)")
                 DispatchQueue.main.async {
                     self.currentSpaceIndex = metadata.index
                     self.currentSpaceUUID = metadata.uuid

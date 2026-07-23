@@ -74,7 +74,14 @@ cd spacepill
 | **Space Notes** | `⌘ + ⇧ + N` |
 | **Context Menu** | `Right Click` on menu item |
 
-**Permissions:** Note that accessibility permissions will be required for the Quick Switch Bar (System Settings -> Privacy & Security -> Accessibility).
+**Permissions:** SpacePill asks for two permissions under System Settings → Privacy & Security:
+
+| Permission | Why | Without it |
+| :--- | :--- | :--- |
+| **Accessibility** | Switching Spaces has no API — SpacePill sends the same `⌃1`…`⌃0` / `⌃←→` keystrokes you would press yourself. | The Quick Switch Bar cannot change Spaces. |
+| **Input Monitoring** | Watches for `⌃←`/`⌃→` so the pill updates the instant a Space transition begins instead of after it finishes. | Everything still works; the pill just lags ~1s behind arrow-key switches. |
+
+Quick Switch also relies on **System Settings → Keyboard → Keyboard Shortcuts → Mission Control** having the "Switch to Desktop N" shortcuts enabled, since that is the mechanism it drives.
 
 
 ## 🏛️ Prior Art
@@ -97,5 +104,7 @@ I made SpacePill because (a) I wanted a color-based visual indicator of my curre
 
 
 ## 🔒 Privacy & Permissions
-SpacePill requires Accessibility permissions to simulate the native macOS "Switch to Desktop" shortcuts. It uses private SkyLight APIs to detect space IDs and transitions. SpacePill does not collect any data or connect to the internet.
+SpacePill requires Accessibility permission to simulate the native macOS "Switch to Desktop" shortcuts, and Input Monitoring to notice Space-change keystrokes as they happen (see the table above). It uses private SkyLight APIs to detect space IDs and transitions.
+
+SpacePill does not collect any data or connect to the internet. Your labels, colours, and notes are stored in plain files under `~/.spacepill/` and never leave your machine.
 

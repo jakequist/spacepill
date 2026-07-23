@@ -40,7 +40,7 @@ class StatusBarController: NSObject, NSPopoverDelegate {
     
     func popoverDidClose(_ notification: Notification) {
         // Critical: Clear content view controller to ensure cleanup and avoid leaked event monitors
-        print("SpacePill: Popover closed, cleaning up content")
+        Log.ui.debug("Popover closed, releasing content view controller")
         popover?.contentViewController = nil
     }
     
@@ -96,7 +96,7 @@ class StatusBarController: NSObject, NSPopoverDelegate {
         button.action = #selector(handleAction(_:))
         button.sendAction(on: [.leftMouseDown, .rightMouseDown])
         
-        print("SpacePill: Status bar button setup complete")
+        Log.ui.debug("Status bar button setup complete")
     }
     
     @objc func handleAction(_ sender: NSStatusBarButton) {

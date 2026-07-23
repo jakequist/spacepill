@@ -1,86 +1,26 @@
-# ===== Python =====
-__pycache__/
-*.py[cod]
-*$py.class
+# ===== Swift / SwiftPM =====
+.build/
+.swiftpm/
+Package.resolved
+*.o
+*.dia
 
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-.ENV/
+# ===== Xcode =====
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcuserstate
+*.moved-aside
+*.hmap
+*.dSYM
+*.dSYM.zip
 
-# Packaging/build
-build/
-dist/
-*.egg-info/
-.eggs/
-pip-wheel-metadata/
-
-# Tests/coverage
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.nox/
-hypothesis/
-coverage.xml
-
-# Type checking / linters
-.mypy_cache/
-.pyright/
-.ruff_cache/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# ===== Node / TypeScript =====
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-*.tsbuildinfo
-
-# Build outputs
-dist/
-build/
-out/
-
-# Framework/tooling caches
-.next/
-.nuxt/
-.svelte-kit/
-.vite/
-.turbo/
-.parcel-cache/
-.cache/
-.eslintcache
-
-# Tests/coverage
-coverage/
-
-# Env files (keep .env.example checked in if you use one)
-.env
-.env.*
-!.env.example
+# ===== SpacePill build / release artifacts =====
+staging/
+*.dmg
 
 # ===== OS / Editors =====
 .DS_Store
-Thumbs.db
 .idea/
 .vscode/
-# SubSpace Specific
-subspace.log
-staging/
-*.png
-!Resources/AppIcon.png
-!Resources/subspace-logo.png
-.build/
-inspect_spaces
-test_switch_v2
-test_skylight
-!.assets/
 .envrc

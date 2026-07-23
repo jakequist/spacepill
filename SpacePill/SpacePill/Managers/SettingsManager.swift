@@ -136,7 +136,7 @@ class SettingsManager: ObservableObject {
     private var isUpdating = false
     
     init() {
-        print("SpacePill: SettingsManager initializing")
+        Log.settings.debug("SettingsManager initializing")
         load()
         syncLaunchAtLogin()
     }
@@ -145,7 +145,7 @@ class SettingsManager: ObservableObject {
         // SMAppService requires a proper app bundle and CFBundleIdentifier.
         // It will trap (crash) if run directly from a binary.
         guard Bundle.main.bundleIdentifier != nil else {
-            print("SpacePill: Skipping SMAppService sync - not a proper app bundle")
+            Log.settings.notice("Skipping SMAppService sync - not running from an app bundle")
             return
         }
         
@@ -170,7 +170,7 @@ class SettingsManager: ObservableObject {
                 }
             }
         } catch {
-            print("SpacePill: Failed to update login item status: \(error)")
+            Log.settings.error("Failed to update login item status: \(error.localizedDescription, privacy: .public)")
         }
     }
     

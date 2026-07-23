@@ -80,7 +80,7 @@ class SkyLight {
     static func switchToSpace(index: Int) {
         let metadata = getAllSpacesMetadata()
         guard metadata.contains(where: { $0.index == index }) else {
-            print("SpacePill: Space index \(index) not found")
+            Log.spaces.error("Space index \(index, privacy: .public) not found")
             return
         }
         
@@ -95,7 +95,7 @@ class SkyLight {
         ]
         
         guard let keyCode = keyCodes[index] else {
-            print("SpacePill: Space index \(index) out of range for shortcut switching")
+            Log.spaces.error("Space index \(index, privacy: .public) out of range for shortcut switching")
             return
         }
         
@@ -112,7 +112,7 @@ class SkyLight {
         keyDown?.post(tap: .cghidEventTap)
         keyUp?.post(tap: .cghidEventTap)
         
-        print("SpacePill: Triggered switch to space \(index) via Ctrl+\(index)")
+        Log.spaces.info("Triggered switch to space \(index, privacy: .public) via Ctrl+\(index, privacy: .public)")
     }
     
     /**
@@ -141,7 +141,7 @@ class SkyLight {
      */
     private static func switchToSpaceByStepping(to targetIndex: Int) {
         guard let currentIndex = getActiveSpaceMetadata()?.index else {
-            print("SpacePill: Could not determine current space for stepped switch")
+            Log.spaces.error("Could not determine current space for stepped switch")
             return
         }
         
@@ -157,7 +157,7 @@ class SkyLight {
             }
         }
         
-        print("SpacePill: Triggered switch from space \(currentIndex) to \(targetIndex) via Ctrl+\(delta > 0 ? "Right" : "Left") x\(steps)")
+        Log.spaces.info("Stepping from space \(currentIndex, privacy: .public) to \(targetIndex, privacy: .public) via Ctrl+\(delta > 0 ? "Right" : "Left", privacy: .public) x\(steps, privacy: .public)")
     }
     
     private static func postControlKey(_ keyCode: UInt16) {

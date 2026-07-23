@@ -23,7 +23,7 @@ class GlobalHotKeyManager: ObservableObject {
             let status = GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
             
             if status == noErr {
-                print("SpacePill: Hotkey pressed with ID: \(hotKeyID.id)")
+                Log.hotkeys.debug("Hotkey fired, id=\(hotKeyID.id, privacy: .public)")
                 manager.handlers[hotKeyID.id]?()
             }
             
@@ -32,7 +32,7 @@ class GlobalHotKeyManager: ObservableObject {
         
         let status = InstallEventHandler(GetApplicationEventTarget(), handler, 1, &eventType, Unmanaged.passUnretained(self).toOpaque(), &eventHandlerRef)
         if status != noErr {
-            print("Failed to install event handler: \(status)")
+            Log.hotkeys.error("InstallEventHandler failed, status=\(status, privacy: .public)")
         }
     }
     
@@ -44,15 +44,17 @@ class GlobalHotKeyManager: ObservableObject {
         
         handlers[id] = handler
         
-        var hotKeyID = EventHotKeyID(signature: OSType(123456), id: id)
+        let hotKeyID = EventHotKeyID(signature: OSType(123456), id: id)
         var hotKeyRef: EventHotKeyRef?
         let status = RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
-        
+
         if status == noErr, let ref = hotKeyRef {
             hotKeyRefs[id] = ref
-            print("SpacePill: Registered hotkey ID \(id) (keyCode: \(keyCode))")
+            Log.hotkeys.info("Registered hotkey id=\(id, privacy: .public) keyCode=\(keyCode, privacy: .public) modifiers=\(modifiers, privacy: .public)")
         } else {
-            print("SpacePill: Failed to register hotkey ID \(id): \(status)")
+            // -9878 (eventHotKeyExistsErr) means this key combination is already
+            // claimed — by another app, or by a stale registration of our own.
+            Log.hotkeys.error("RegisterEventHotKey failed id=\(id, privacy: .public) keyCode=\(keyCode, privacy: .public) status=\(status, privacy: .public)")
         }
     }
     

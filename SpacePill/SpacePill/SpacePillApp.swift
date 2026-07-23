@@ -21,12 +21,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
         
         if isAlreadyRunning {
-            print("SpacePill: Another instance is already running. Exiting.")
+            Log.app.notice("Another instance is already running; exiting.")
             NSApp.terminate(nil)
             return
         }
 
-        print("SpacePill: AppDelegate applicationDidFinishLaunching")
+        Log.app.info("applicationDidFinishLaunching")
         NSApp.setActivationPolicy(.accessory)
         
         statusBarController = StatusBarController(settingsManager, spaceManager, notesManager, self)
@@ -49,7 +49,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             
             let source = DispatchSource.makeSignalSource(signal: sig, queue: .main)
             source.setEventHandler { [weak self] in
-                print("\nSpacePill: Received signal \(sig), exiting gracefully...")
+                Log.app.notice("Received signal \(sig, privacy: .public); exiting gracefully.")
                 self?.saveAll()
                 NSApp.terminate(nil)
             }
@@ -59,7 +59,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     func saveAll() {
-        print("SpacePill: Saving all state before exit...")
+        Log.app.info("Saving all state before exit")
         settingsManager.save()
         notesManager.saveCurrentNotes()
     }
@@ -74,12 +74,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
         let accessEnabled = AXIsProcessTrustedWithOptions(options as CFDictionary)
         if !accessEnabled {
-            print("SpacePill: Accessibility permissions NOT granted. Space switching may fail.")
+            Log.app.error("Accessibility permission not granted; space switching will fail.")
         }
     }
     
     private func setupHotKeys() {
-        print("SpacePill: setupHotKeys started")
+        Log.hotkeys.debug("setupHotKeys started")
         // 1. Quick Edit Hotkey (Always enabled)
         hotKeyManager.registerHotKey(
             id: 1, 
@@ -122,7 +122,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         } else {
             hotKeyManager.unregisterHotKey(id: 3)
         }
-        print("SpacePill: setupHotKeys complete")
+        Log.hotkeys.debug("setupHotKeys complete")
     }
     
     /**
