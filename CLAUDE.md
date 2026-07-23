@@ -41,6 +41,7 @@ SpacePill/SpacePill/
   Views/                    SwiftUI: QuickEdit, QuickSwitch, Notes, Preferences, HotKeyRecorder
   Utils/
     SkyLight.swift          private SkyLight/CGS API bindings + space switching
+    SpaceShortcuts.swift    reads the user's "Switch to Desktop N" key bindings
     Log.swift               os.Logger channels
 ```
 
@@ -105,23 +106,67 @@ loses both grants**. Symptom: hotkeys and pill tracking work, you rebuild, and
 they silently stop.
 
 Run `./bin/dev-cert.sh` once per machine to create a stable self-signed
-identity. `bin/start.sh` then picks it up automatically and grants stick.
+identity; `bin/start.sh` picks it up automatically. The designated requirement
+then pins to the certificate rather than a cdhash, so grants survive rebuilds:
+
+```
+designated => identifier "com.jake.SpacePill" and certificate leaf = H"3ae0f5..."
+```
+
+Two things that make this trickier than it looks:
+
+- The identity lives in a **dedicated keychain**, not the login keychain.
+  Releasing a login-keychain private key needs user authorisation, which a
+  background or SSH session can never obtain (`launchctl managername` →
+  `Background`) — so builds outside a GUI session fail with
+  `errSecInternalComponent` no matter how the keychain is set up.
+- `codesign` does **not** require the certificate to be trusted. Trust only
+  affects Gatekeeper and `find-identity -v`. Because a self-signed cert is never
+  "valid", any lookup must use `find-identity` *without* `-v` or it will silently
+  find nothing and fall back to ad-hoc.
+
+Changing the signature invalidates existing TCC entries, and toggling them in
+System Settings does not rebind them. Clear them instead:
+
+```bash
+tccutil reset Accessibility com.jake.SpacePill
+tccutil reset ListenEvent com.jake.SpacePill
+```
 
 ### Space switching is simulated keystrokes, not an API
 
 There is no public or private API to activate a Space directly.
-`SkyLight.switchToSpace` posts **Ctrl+1..0** for Spaces 1–10 and steps with
-**Ctrl+Left/Right** beyond that. This depends on the user's own shortcuts being
-enabled in System Settings → Keyboard → Shortcuts → Mission Control, which
-they often are not, and which the app does not currently detect. Check with:
+`SkyLight.switchToSpace` replays the user's own "Switch to Desktop N" shortcut.
+That makes their System Settings configuration part of the app's contract:
+
+- **These shortcuts are disabled by default.** A stock macOS install has nothing
+  bound, so Quick Switch cannot move at all until the user enables them under
+  System Settings → Keyboard → Keyboard Shortcuts → Mission Control.
+- **macOS only defines ten of them** (symbolic hotkey IDs 118…127 = Desktop
+  1…10). Desktop 11+ is unreachable, full stop. Stepping there with
+  Ctrl+Left/Right was tried and removed: transitions take ~0.5s and swallow
+  arrow keys posted mid-flight, so multi-step hops land somewhere arbitrary.
+- **Users can rebind them**, so never hardcode Ctrl+N.
+
+`Utils/SpaceShortcuts.swift` reads all of this from the
+`com.apple.symbolichotkeys` domain. Always gate a jump on
+`SkyLight.canSwitchToSpace(index:)` rather than on the index alone, and surface
+the refusal — a switch that silently does nothing is indistinguishable from a
+bug. Inspect the live state with:
 
 ```bash
 # 118..127 = "Switch to Desktop 1..10"; 79-82 = move left/right a space
-/usr/libexec/PlistBuddy -c "Print :AppleSymbolicHotKeys:118:enabled" \
+/usr/libexec/PlistBuddy -c "Print :AppleSymbolicHotKeys:118" \
     ~/Library/Preferences/com.apple.symbolichotkeys.plist
 ```
 
-"Does Not Exist" means the shortcut is at its system default, not that it is off.
+An absent entry means the factory default, which for these IDs is *off*.
+
+Two gotchas when testing this by hand: `defaults write` to that domain does
+**not** take effect until the WindowServer re-reads it at login, so enable
+shortcuts through the System Settings UI (which registers them live); and
+`cfprefsd` caches the domain, so editing the plist behind its back is invisible
+to a running app until `killall cfprefsd`.
 
 ### Private SkyLight API
 
@@ -228,5 +273,6 @@ When changing anything in the table below, re-verify by hand:
 | hotkey registration | all three hotkeys, **and** again after opening Preferences |
 | pill rendering | labelled and unlabelled Spaces, light and dark menu bar |
 | space detection | Ctrl+Arrow, Mission Control click, and a >10 Space setup |
+| space switching | with the Desktop shortcuts enabled *and* disabled |
 | notes | switching Spaces mid-edit, and that content follows the right Space |
 | settings | delete `~/.spacepill/settings.json` and relaunch |
