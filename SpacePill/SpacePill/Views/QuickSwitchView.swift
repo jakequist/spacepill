@@ -16,8 +16,11 @@ struct QuickSwitchView: View {
         let index: Int
         let label: String?
         let color: Color?
+
+        /// False for Desktop 11+, which macOS provides no way to jump to.
+        var isReachable: Bool { SkyLight.canSwitchToSpace(index: index) }
     }
-    
+
     private var filteredMatches: [MatchItem] {
         let allSpaces = SkyLight.getAllSpacesMetadata()
         let items = allSpaces.map { metadata in
@@ -70,18 +73,23 @@ struct QuickSwitchView: View {
                                 .background(item.color ?? Color.gray)
                                 .clipShape(Circle())
                                 .overlay(Circle().stroke(Color.black.opacity(0.2), lineWidth: 1))
-                            
+
                             Text(item.label ?? "Space \(item.index)")
                                 .font(.system(size: 14, weight: index == selectedIndex ? .bold : .regular))
-                            
+
                             Spacer()
-                            
-                            if index == selectedIndex {
+
+                            if !item.isReachable {
+                                Image(systemName: "nosign")
+                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 12))
+                            } else if index == selectedIndex {
                                 Text("⏎")
                                     .foregroundColor(.secondary)
                                     .font(.system(size: 14))
                             }
                         }
+                        .opacity(item.isReachable ? 1.0 : 0.4)
                         .padding(.vertical, 6)
                         .padding(.horizontal, 10)
                         .background(index == selectedIndex ? Color.accentColor.opacity(0.25) : Color.clear)
@@ -110,9 +118,18 @@ struct QuickSwitchView: View {
             
             // Helper Hint
             HStack {
-                Text("↑↓ to navigate • ⏎ to switch • ESC to close")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
+                if let selected = selectedItem, !selected.isReachable {
+                    // Keep this to one line: the popover height is fixed, and a
+                    // wrapped hint crowds the last row of the list.
+                    Text("Can't jump here — macOS has no shortcut past Desktop \(SkyLight.maxSwitchableSpaceIndex)")
+                        .font(.system(size: 10))
+                        .foregroundColor(.orange)
+                        .lineLimit(1)
+                } else {
+                    Text("↑↓ to navigate • ⏎ to switch • ESC to close")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
                 Spacer()
             }
             .padding(.horizontal)
@@ -164,9 +181,23 @@ struct QuickSwitchView: View {
         }
     }
     
+    private var selectedItem: MatchItem? {
+        let matches = filteredMatches
+        guard matches.indices.contains(selectedIndex) else { return nil }
+        return matches[selectedIndex]
+    }
+
     private func executeSwitch() {
-        guard !filteredMatches.isEmpty else { return }
-        let item = filteredMatches[selectedIndex]
+        guard let item = selectedItem else { return }
+
+        // Don't post keystrokes we know macOS will ignore -- landing on an
+        // arbitrary space is worse than staying put. The footer already
+        // explains why this row is disabled.
+        guard item.isReachable else {
+            Log.ui.notice("QuickSwitch ignoring unreachable space \(item.index, privacy: .public)")
+            return
+        }
+
         Log.ui.info("QuickSwitch requesting switch to space \(item.index, privacy: .public)")
         SkyLight.switchToSpace(uuid: item.id)
         onDismiss?()

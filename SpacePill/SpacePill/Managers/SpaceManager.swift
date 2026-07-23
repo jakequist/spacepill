@@ -23,6 +23,16 @@ class SpaceManager: ObservableObject {
     private var timer: Timer?
     private var keyboardEventTap: CFMachPort?
     private var keyboardEventTapSource: CFRunLoopSource?
+
+    /// The space an optimistic update is betting on, until SkyLight agrees.
+    private var pendingVisualUUID: String?
+    /// Give up on that bet after this instant and trust SkyLight again.
+    private var pendingVisualExpiry: Date?
+
+    /// How long to keep showing a predicted space before assuming the guess was
+    /// wrong. Native transitions take roughly half a second; this leaves room
+    /// for a slow one without stranding the pill on a space we never reached.
+    private static let optimisticHoldDuration: TimeInterval = 2.0
     
     init() {
         Log.spaces.debug("SpaceManager initializing")
@@ -100,32 +110,62 @@ class SpaceManager: ObservableObject {
         guard let target = spaces.first(where: { $0.index == targetIndex }) else { return }
         
         DispatchQueue.main.async {
+            // Claim the bet even if the pill already shows this space, so a
+            // stale reading can't drag it backwards mid-transition.
+            self.pendingVisualUUID = target.uuid
+            self.pendingVisualExpiry = Date().addingTimeInterval(Self.optimisticHoldDuration)
+
             guard self.visualSpaceIndex != target.index || self.visualSpaceUUID != target.uuid else { return }
-            
+
             Log.spaces.debug("Optimistic visual space update index=\(target.index, privacy: .public) uuid=\(target.uuid, privacy: .public)")
             self.visualSpaceIndex = target.index
             self.visualSpaceUUID = target.uuid
         }
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
             self?.updateSpaces()
         }
     }
-    
+
     func updateSpaces() {
-        if let metadata = SkyLight.getActiveSpaceMetadata() {
-            if metadata.uuid != currentSpaceUUID ||
-                metadata.index != currentSpaceIndex ||
-                metadata.uuid != visualSpaceUUID ||
-                metadata.index != visualSpaceIndex {
-                Log.spaces.debug("Space updated index=\(metadata.index, privacy: .public) uuid=\(metadata.uuid, privacy: .public)")
-                DispatchQueue.main.async {
+        guard let metadata = SkyLight.getActiveSpaceMetadata() else { return }
+
+        DispatchQueue.main.async {
+            // A native space transition takes most of a second, and SkyLight
+            // keeps reporting the *old* space for its duration. Without this
+            // guard the poll timer overwrites an optimistic update with that
+            // stale value and the pill visibly flickers back to the previous
+            // label before settling on the new one.
+            if let pending = self.pendingVisualUUID {
+                if metadata.uuid == pending {
+                    // The transition landed where we predicted.
+                    self.pendingVisualUUID = nil
+                    self.pendingVisualExpiry = nil
+                } else if let expiry = self.pendingVisualExpiry, Date() < expiry {
+                    // Still in flight. Track the confirmed space but leave the
+                    // prediction on screen.
                     self.currentSpaceIndex = metadata.index
                     self.currentSpaceUUID = metadata.uuid
-                    self.visualSpaceIndex = metadata.index
-                    self.visualSpaceUUID = metadata.uuid
+                    return
+                } else {
+                    // The prediction never came true -- the switch was refused
+                    // or the user went somewhere else. Fall through and correct.
+                    Log.spaces.debug("Optimistic space prediction expired; correcting to index=\(metadata.index, privacy: .public)")
+                    self.pendingVisualUUID = nil
+                    self.pendingVisualExpiry = nil
                 }
             }
+
+            guard metadata.uuid != self.currentSpaceUUID ||
+                    metadata.index != self.currentSpaceIndex ||
+                    metadata.uuid != self.visualSpaceUUID ||
+                    metadata.index != self.visualSpaceIndex else { return }
+
+            Log.spaces.debug("Space updated index=\(metadata.index, privacy: .public) uuid=\(metadata.uuid, privacy: .public)")
+            self.currentSpaceIndex = metadata.index
+            self.currentSpaceUUID = metadata.uuid
+            self.visualSpaceIndex = metadata.index
+            self.visualSpaceUUID = metadata.uuid
         }
     }
     
