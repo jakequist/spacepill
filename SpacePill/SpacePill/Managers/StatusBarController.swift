@@ -58,7 +58,7 @@ class StatusBarController: NSObject, NSPopoverDelegate {
     }
     
     private func setupSpaceObserver() {
-        spaceManager.$currentSpaceIndex
+        spaceManager.$visualSpaceUUID
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.handleSpaceChange()
@@ -72,7 +72,7 @@ class StatusBarController: NSObject, NSPopoverDelegate {
             return
         }
         
-        guard let uuid = spaceManager.currentSpaceUUID else { return }
+        guard let uuid = spaceManager.visualSpaceUUID ?? spaceManager.currentSpaceUUID else { return }
         let shouldBeOpen = settingsManager.spaceConfigs[uuid]?.isNotesOpen ?? false
         
         if shouldBeOpen {
@@ -135,7 +135,7 @@ class StatusBarController: NSObject, NSPopoverDelegate {
         if let window = notesWindow, window.isVisible {
             if window.isKeyWindow {
                 window.orderOut(nil)
-                if let uuid = spaceManager.currentSpaceUUID {
+                if let uuid = spaceManager.visualSpaceUUID ?? spaceManager.currentSpaceUUID {
                     settingsManager.setNotesOpen(for: uuid, isOpen: false)
                 }
             } else {
@@ -152,7 +152,7 @@ class StatusBarController: NSObject, NSPopoverDelegate {
         positionNotesWindow()
         notesWindow?.makeKeyAndOrderFront(nil)
         
-        if let uuid = spaceManager.currentSpaceUUID {
+        if let uuid = spaceManager.visualSpaceUUID ?? spaceManager.currentSpaceUUID {
             settingsManager.setNotesOpen(for: uuid, isOpen: true)
         }
     }
@@ -263,8 +263,8 @@ struct MenuBarIndicatorView: View {
 
     var body: some View {
         ZStack {
-            if let index = spaceManager.currentSpaceIndex,
-               let uuid = spaceManager.currentSpaceUUID {
+            if let index = spaceManager.visualSpaceIndex,
+               let uuid = spaceManager.visualSpaceUUID {
                 let config = settingsManager.spaceConfigs[uuid]
                 let labelText = config?.label
                 let isConfigured = config != nil

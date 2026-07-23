@@ -7,9 +7,13 @@ struct NotesView: View {
     
     @State private var contentHeight: CGFloat = 100
     
+    private var displayedSpaceUUID: String? {
+        spaceManager.visualSpaceUUID ?? spaceManager.currentSpaceUUID
+    }
+    
     var borderColor: Color {
         if settingsManager.matchSpaceColorForNotesBorder,
-           let uuid = spaceManager.currentSpaceUUID,
+           let uuid = displayedSpaceUUID,
            let config = settingsManager.spaceConfigs[uuid],
            let color = config.color {
             return color
@@ -30,18 +34,18 @@ struct NotesView: View {
                 height: $contentHeight,
                 scrollPosition: Binding(
                     get: {
-                        if let uuid = spaceManager.currentSpaceUUID {
+                        if let uuid = displayedSpaceUUID {
                             return settingsManager.spaceConfigs[uuid]?.scrollPosition ?? 0.0
                         }
                         return 0.0
                     },
                     set: { newValue in
-                        if let uuid = spaceManager.currentSpaceUUID {
+                        if let uuid = displayedSpaceUUID {
                             settingsManager.setScrollPosition(for: uuid, position: newValue)
                         }
                     }
                 ),
-                spaceUUID: spaceManager.currentSpaceUUID ?? ""
+                spaceUUID: displayedSpaceUUID ?? ""
             )
             .padding(8)
         }

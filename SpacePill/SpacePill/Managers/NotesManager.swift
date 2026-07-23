@@ -12,8 +12,8 @@ class NotesManager: ObservableObject {
     }()
     
     init(spaceManager: SpaceManager) {
-        // Observe space changes to load corresponding notes
-        spaceManager.$currentSpaceIndex
+        // Follow the visual space so notes update as soon as a native transition starts.
+        spaceManager.$visualSpaceIndex
             .sink { [weak self] index in
                 if let index = index {
                     self?.loadNotes(for: index)
