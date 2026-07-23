@@ -22,6 +22,7 @@ rm -rf "$STAGING_DIR"
 rm -rf "$PROJECT_DIR/SpacePill/.build"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
+mkdir -p "$APP_BUNDLE/Contents/Helpers"
 
 # 2. Build executable
 cd "$PROJECT_DIR/SpacePill"
@@ -29,6 +30,15 @@ swift build -c release
 
 # 3. Create .app structure
 cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
+# `spacepill`, the command-line client, rides along inside the bundle. The Cask
+# exposes it with a `binary` stanza; direct-download users run
+# `spacepill install-cli` to symlink it into /usr/local/bin.
+#
+# Contents/Helpers rather than Contents/MacOS: macOS filesystems are
+# case-insensitive by default, so `MacOS/spacepill` and `MacOS/SpacePill` are one
+# and the same file and the copy would overwrite the app. That collision is also
+# why the SwiftPM product is named SpacePillCLI.
+cp "$BUILD_DIR/SpacePillCLI" "$APP_BUNDLE/Contents/Helpers/spacepill"
 cp "$PROJECT_DIR/SpacePill/SpacePill/Resources/Info.plist" "$APP_BUNDLE/Contents/"
 
 # Stamp the version from ./VERSION so the bundle never drifts from the repo.
@@ -43,6 +53,9 @@ cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/"
 # Usage: APPLE_IDENTITY="Developer ID Application: Your Name (TEAMID)" APPLE_ID="email@example.com" APPLE_PASSWORD="app-specific-password" ./bin/package.sh
 if [ -n "$APPLE_IDENTITY" ]; then
     echo "SGN Signing $APP_BUNDLE..."
+    # Nested first: the bundled `spacepill` CLI is separate code, and sealing an
+    # unsigned binary into the bundle fails notarisation.
+    codesign --force --options runtime --sign "$APPLE_IDENTITY" "$APP_BUNDLE/Contents/Helpers/spacepill"
     codesign --deep --force --options runtime --sign "$APPLE_IDENTITY" "$APP_BUNDLE"
 
     echo "📦 Creating ZIP for notarization..."

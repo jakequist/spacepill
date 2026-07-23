@@ -43,8 +43,16 @@ echo "📦 Assembling $APP_NAME.app..."
 pkill -x "$APP_NAME" 2>/dev/null || true
 
 rm -rf "$APP_BUNDLE"
-mkdir -p "$APP_BUNDLE/Contents/MacOS" "$APP_BUNDLE/Contents/Resources"
+mkdir -p "$APP_BUNDLE/Contents/MacOS" "$APP_BUNDLE/Contents/Resources" "$APP_BUNDLE/Contents/Helpers"
 cp "$BUILT_BINARY" "$APP_BUNDLE/Contents/MacOS/"
+# The `spacepill` CLI ships inside the bundle so Homebrew can symlink it onto
+# PATH and `spacepill install-cli` has something to point at.
+#
+# It goes in Contents/Helpers, not Contents/MacOS, because macOS filesystems are
+# case-insensitive by default: `MacOS/spacepill` and `MacOS/SpacePill` are the
+# same file, and copying it there silently overwrites the app itself. The same
+# collision is why the SwiftPM product is called SpacePillCLI.
+cp "$PROJECT_DIR/SpacePill/.build/$CONFIG/SpacePillCLI" "$APP_BUNDLE/Contents/Helpers/spacepill"
 cp "$PROJECT_DIR/SpacePill/SpacePill/Resources/Info.plist" "$APP_BUNDLE/Contents/"
 cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $(cat "$PROJECT_DIR/VERSION")" \
@@ -69,13 +77,18 @@ if [ -z "$SIGN_IDENTITY" ] && [ -f "$DEV_KEYCHAIN" ] && [ -f "$DEV_KEYCHAIN_PASS
         | awk '/"SpacePill Dev"/ {print $2; exit}')
 fi
 
+# Nested code is signed before its container, or codesign seals an unsigned
+# binary into the bundle and Gatekeeper rejects the whole thing.
 if [ -n "$SIGN_IDENTITY" ]; then
     echo "🔏 Signing as: $SIGN_IDENTITY"
+    codesign --force --options runtime --sign "$SIGN_IDENTITY" \
+        --keychain "$DEV_KEYCHAIN" "$APP_BUNDLE/Contents/Helpers/spacepill"
     codesign --force --options runtime --sign "$SIGN_IDENTITY" \
         --keychain "$DEV_KEYCHAIN" "$APP_BUNDLE"
 else
     echo "🔏 Signing ad-hoc (permissions must be re-granted after each rebuild)"
     echo "   Run ./bin/dev-cert.sh once to make them stick."
+    codesign --force --sign - "$APP_BUNDLE/Contents/Helpers/spacepill"
     codesign --force --sign - "$APP_BUNDLE"
 fi
 

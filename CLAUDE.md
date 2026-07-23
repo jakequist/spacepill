@@ -20,6 +20,9 @@ macOS 13+, built and shipped as a `.app` bundle.
 ./bin/dev-cert.sh           # one-time: stable dev signing identity (see below)
 ./bin/package.sh            # signed/notarised .app + .dmg into staging/
 ./bin/release.sh            # tag, package, update Cask, publish GitHub release
+
+# The CLI, from a dev build (it is not on PATH until installed):
+./staging/SpacePill.app/Contents/Helpers/spacepill doctor
 ```
 
 `swift build` alone produces a bare executable. **Do not run that binary
@@ -38,11 +41,18 @@ SpacePill/SpacePill/
     NotesManager.swift      ~/.spacepill/space_<N>/notes.md
     GlobalHotKeyManager.swift   Carbon RegisterEventHotKey wrapper
     StatusBarController.swift   NSStatusItem, popovers, the floating notes panel
+    CLIServer.swift         Unix socket control channel for the `spacepill` CLI
   Views/                    SwiftUI: QuickEdit, QuickSwitch, Notes, Preferences, HotKeyRecorder
   Utils/
     SkyLight.swift          private SkyLight/CGS API bindings + space switching
     SpaceShortcuts.swift    reads the user's "Switch to Desktop N" key bindings
     Log.swift               os.Logger channels
+
+SpacePill/SpacePillCLI/     the `spacepill` CLI -- a separate executable target
+  main.swift                argument parsing, human output, doctor, install-cli
+  Client.swift              the socket client and exit codes
+  Update.swift              `spacepill update`
+  Support.swift             version resolution, subprocesses, semver
 ```
 
 Data flow: `SpaceManager` publishes the current space → `StatusBarController`
@@ -67,6 +77,104 @@ re-points existing notes at the wrong Space. Prefer UUID for anything new.
 `visual*` is an optimistic guess applied the instant a Ctrl+Arrow keypress is
 seen, so the pill updates at the start of the native animation rather than
 ~700ms later. UI should read `visual*` and fall back to `current*`.
+
+---
+
+## The `spacepill` CLI and its IPC protocol
+
+`spacepill` is a second executable that ships inside the bundle. It holds **no**
+state and calls **no** private API — it opens a Unix domain socket to the running
+app and asks it to do the work.
+
+That split is not stylistic. Switching a Space means posting keystrokes, which
+requires Accessibility, and TCC keys grants to the binary that posts them. A CLI
+that switched Spaces itself would need its own Accessibility grant and would
+throw a second, scarier-looking permission prompt at the user. Routing through
+the app reuses the one grant SpacePill already has, and keeps a single source of
+truth for labels, colours and notes.
+
+### Transport
+
+`~/.spacepill/spacepill.sock`, chmod 0600. The app creates it in
+`applicationDidFinishLaunching` (unlinking any stale one first — `bind` fails
+with EADDRINUSE on a leftover inode) and removes it from `AppDelegate.shutdown()`,
+which both `applicationWillTerminate` and the SIGINT/SIGTERM handlers call.
+
+One line of UTF-8 JSON per request, `\n` terminated; one line back; server closes.
+
+```
+-> {"protocol":1,"command":"list","args":{}}
+<- {"ok":true,"data":{"spaces":[…]}}
+<- {"ok":false,"code":"not_found","error":"No space matching \"9\"."}
+```
+
+Unknown `protocol` values are rejected with `unsupported_protocol`. Commands:
+`status`, `list`, `switch`, `set-label`, `clear-label`, `notes-get`, `notes-set`,
+`notes-path`. Omitting `index`/`uuid` always means the current Space.
+
+Error slugs map to CLI exit codes: `0` ok, `1` error, `2` usage,
+`3` app not running, `4` `unreachable`/`no_shortcut`, `5` `not_found`.
+
+### Threading
+
+`accept` and all socket I/O run on background queues; every command handler runs
+inside a single `DispatchQueue.main.sync` hop, because SkyLight, AppKit and the
+`@Published` manager state are all main-queue-only. Getting this wrong produces
+intermittent crashes rather than reliable ones.
+
+Two POSIX traps this code already pays for:
+
+- **BSD kernels give the accepted socket the listener's file status flags.** The
+  listening fd is `O_NONBLOCK` so the dispatch source can drain the backlog, and
+  the accepted fd inherits it — so the first `read()` returns EAGAIN whenever the
+  request has not landed yet. It presents as a random "empty request" error.
+  `serve()` clears `O_NONBLOCK` explicitly and relies on `SO_RCVTIMEO`.
+- `SO_NOSIGPIPE` on every accepted socket, or a client that hangs up mid-reply
+  kills the app.
+
+Reachability must go through `SkyLight.canSwitchToSpace(index:)` /
+`SpaceShortcuts`. `SpaceShortcuts` caches, so `status` and `list` call
+`refresh()` first — otherwise a shortcut enabled while SpacePill was running
+never shows up.
+
+### Where the binary lives, and why the names are odd
+
+**macOS filesystems are case-insensitive by default.** Two consequences, both of
+which silently corrupt the build if you "fix" the names back:
+
+- The SwiftPM target is `SpacePillCLI`, not `spacepill`. A target named
+  `spacepill` shares `.build/<arch>/<config>/spacepill.build` and its output
+  binary with `SpacePill`, and SwiftPM cheerfully compiles the *app's* sources
+  into it.
+- It is installed to `SpacePill.app/Contents/**Helpers**/spacepill`, not
+  `Contents/MacOS/`. `MacOS/spacepill` and `MacOS/SpacePill` are the same file:
+  copying it there overwrites the app binary with the CLI, and the app then
+  "launches" by printing CLI help and exiting.
+
+`bin/start.sh` and `bin/package.sh` copy and rename it; both sign the nested
+binary *before* the enclosing bundle. The Cask exposes it with
+`binary "#{appdir}/SpacePill.app/Contents/Helpers/spacepill"`; direct-download
+users run `spacepill install-cli` to symlink it into `/usr/local/bin`.
+
+The CLI has no compiled-in version number: it reads
+`CFBundleShortVersionString` from the bundle two directories above itself
+(resolving symlinks first, since Homebrew puts one on `PATH`), and falls back to
+asking the running app. `./VERSION` stays the only source of truth.
+
+### `spacepill update`
+
+Homebrew installs are handed to `brew upgrade --cask spacepill` via `execv`.
+Everything else compares against the GitHub latest-release API, and for an actual
+install requires **both** `codesign --verify --deep --strict` to pass **and** an
+`Authority=Developer ID Application:` line before anything is copied. An update
+path that installs whatever a URL returns is a remote code execution primitive;
+refusing an unverifiable build is the feature. Note a self-signed certificate
+passes `--verify` happily — the authority check is the one doing the work.
+
+`brew outdated` exits non-zero for reasons unrelated to the version (untrusted
+tap, no network). Empty stdout then means "brew could not tell us", not "up to
+date"; the code falls back to the GitHub comparison rather than reporting a
+reassuring lie.
 
 ---
 
@@ -219,6 +327,7 @@ Everything lives in `~/.spacepill/`:
 ```
 ~/.spacepill/settings.json      SettingsData (hotkeys, toggles, per-space label/colour)
 ~/.spacepill/space_<N>/notes.md per-space notes, keyed by index (see caveat above)
+~/.spacepill/spacepill.sock     CLI control socket, 0600, only while the app runs
 ```
 
 `SettingsManager` mirrors each field as a `@Published` property with
@@ -276,3 +385,9 @@ When changing anything in the table below, re-verify by hand:
 | space switching | with the Desktop shortcuts enabled *and* disabled |
 | notes | switching Spaces mid-edit, and that content follows the right Space |
 | settings | delete `~/.spacepill/settings.json` and relaunch |
+| the CLI or `CLIServer` | `spacepill doctor`, and every command with the app **down** (all must exit 3, not hang) |
+| bundle layout / build scripts | that `Contents/MacOS/SpacePill` is still the app and not the CLI |
+
+The CLI is the one part of this project that *is* testable without the GUI —
+drive it over the socket, and poke the raw protocol with
+`nc -U ~/.spacepill/spacepill.sock`.

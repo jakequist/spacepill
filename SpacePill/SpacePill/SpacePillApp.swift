@@ -8,7 +8,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     lazy var notesManager = NotesManager(spaceManager: spaceManager)
     var hotKeyManager = GlobalHotKeyManager()
     var statusBarController: StatusBarController?
-    
+    private var cliServer: CLIServer?
+
     private var preferencesWindow: NSWindow?
     private var signalSources: [DispatchSourceSignal] = []
     
@@ -33,7 +34,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         
         setupHotKeys()
         setupSignalHandlers()
-        
+
+        // The `spacepill` CLI is a thin client over this socket; the app keeps
+        // all the state and all the TCC grants. Started after the managers exist
+        // because every handler reads them.
+        let server = CLIServer(settingsManager: settingsManager,
+                               spaceManager: spaceManager,
+                               notesManager: notesManager)
+        server.start()
+        cliServer = server
+
         // Listen for setting changes
         settingsManager.objectWillChange.sink { [weak self] _ in
             DispatchQueue.main.async {
@@ -50,7 +60,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             let source = DispatchSource.makeSignalSource(signal: sig, queue: .main)
             source.setEventHandler { [weak self] in
                 Log.app.notice("Received signal \(sig, privacy: .public); exiting gracefully.")
-                self?.saveAll()
+                self?.shutdown()
                 NSApp.terminate(nil)
             }
             source.resume()
@@ -64,8 +74,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         notesManager.saveCurrentNotes()
     }
     
-    func applicationWillTerminate(_ notification: Notification) {
+    /**
+     * Save state and tear down the CLI socket. Called from both exit paths;
+     * `CLIServer.stop()` is idempotent so the double call is harmless.
+     */
+    private func shutdown() {
         saveAll()
+        cliServer?.stop()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        shutdown()
     }
     
     private var cancellables = Set<AnyCancellable>()

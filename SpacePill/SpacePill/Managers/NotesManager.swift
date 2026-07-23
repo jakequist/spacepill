@@ -24,11 +24,46 @@ class NotesManager: ObservableObject {
     
     private func getNotesURL(for index: Int) -> URL {
         let spaceDir = baseDirectory.appendingPathComponent("space_\(index)", isDirectory: true)
-        
+
         // Ensure directory exists
         try? FileManager.default.createDirectory(at: spaceDir, withIntermediateDirectories: true)
-        
+
         return spaceDir.appendingPathComponent("notes.md")
+    }
+
+    /**
+     * Where a space's notes live on disk, without creating anything.
+     *
+     * Reporting a path should not have the side effect of making directories,
+     * so this deliberately does not call `getNotesURL`.
+     */
+    func notesURL(forSpace index: Int) -> URL {
+        baseDirectory
+            .appendingPathComponent("space_\(index)", isDirectory: true)
+            .appendingPathComponent("notes.md")
+    }
+
+    /**
+     * Notes for an arbitrary space, for callers outside the notes panel.
+     *
+     * The current space is answered from memory: the panel may hold edits that
+     * have not been flushed yet, and reading the file would return stale text.
+     */
+    func notes(forSpace index: Int) -> String {
+        if index == currentSpaceIndex { return currentNotes }
+        return (try? String(contentsOf: notesURL(forSpace: index), encoding: .utf8)) ?? ""
+    }
+
+    /**
+     * Replaces a space's notes. Writing the current space also updates the
+     * published copy so an open notes panel redraws instead of overwriting the
+     * new text on its next save.
+     */
+    func setNotes(_ text: String, forSpace index: Int) {
+        if index == currentSpaceIndex {
+            currentNotes = text
+        }
+        saveNotes(text, for: index)
     }
     
     func loadNotes(for index: Int) {

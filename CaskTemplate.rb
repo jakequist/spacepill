@@ -10,6 +10,9 @@ cask "spacepill" do
   depends_on macos: ">= :ventura"
 
   app "SpacePill.app"
+  # The CLI ships inside the bundle and talks to the running app over a Unix
+  # socket, so it needs no permissions of its own.
+  binary "#{appdir}/SpacePill.app/Contents/Helpers/spacepill"
 
   # Must match CFBundleIdentifier in SpacePill/SpacePill/Resources/Info.plist.
   uninstall quit: "com.jake.SpacePill"

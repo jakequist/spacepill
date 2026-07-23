@@ -8,6 +8,7 @@ cask "spacepill" do
   homepage "https://github.com/jakequist/spacepill"
 
   app "SpacePill.app"
+  binary "#{appdir}/SpacePill.app/Contents/Helpers/spacepill"
 
   uninstall quit: "com.jakequist.SpacePill"
 
