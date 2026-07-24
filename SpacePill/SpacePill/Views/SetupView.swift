@@ -80,7 +80,7 @@ struct SetupView: View {
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 25) {
+                VStack(alignment: .leading, spacing: 20) {
                     header
 
                     section("Permissions") {
@@ -98,18 +98,20 @@ struct SetupView: View {
                         Divider()
                         notesRow
                     }
-
-                    summary
                 }
-                .padding(30)
+                .padding(24)
             }
 
             Divider()
 
-            HStack {
+            HStack(spacing: 12) {
+                // In the footer rather than the scroll area: it is the one-line
+                // answer to "is this working", and it should never be scrolled
+                // out of sight.
+                summary
+                Spacer()
                 Button("Re-check") { refresh() }
                     .buttonStyle(.bordered)
-                Spacer()
                 Button("Done") {
                     if let window = NSApp.keyWindow {
                         window.close()
@@ -121,7 +123,7 @@ struct SetupView: View {
             .padding()
             .background(VisualEffectView(material: .contentBackground, blendingMode: .withinWindow))
         }
-        .frame(width: 550, height: 640)
+        .frame(width: 550, height: 700)
         .onAppear(perform: refresh)
         .onReceive(NotificationCenter.default.publisher(
             for: NSApplication.didBecomeActiveNotification
@@ -143,7 +145,7 @@ struct SetupView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Setting up SpacePill")
                 .font(.title2.weight(.semibold))
-            Text("SpacePill works as soon as these are in place. It re-checks every time you come back to this window.")
+            Text("Everything SpacePill needs, re-checked each time you come back to this window.")
                 .font(.callout)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -201,7 +203,7 @@ struct SetupView: View {
                 }
                 .buttonStyle(.bordered)
 
-                Text("Keyboard Shortcuts… → Mission Control → Mission Control, then tick “Switch to Desktop 1”, “Switch to Desktop 2”, and so on. Only Desktops 1–\(checks.maxDesktop) exist; anything past that is unreachable by design.")
+                Text("Keyboard Shortcuts… → Mission Control, then tick “Switch to Desktop 1”, “Switch to Desktop 2”, and so on. macOS defines only Desktops 1–\(checks.maxDesktop); anything past that is unreachable by design.")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -259,16 +261,12 @@ struct SetupView: View {
     }
 
     private var summary: some View {
-        GroupBox {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Image(systemName: checks.reachableSpaceCount > 0 ? "rectangle.3.group" : "exclamationmark.triangle.fill")
-                    .foregroundColor(checks.reachableSpaceCount > 0 ? .secondary : .orange)
-                Text("\(checks.spaceCount) Space\(checks.spaceCount == 1 ? "" : "s") on this Mac, \(checks.reachableSpaceCount) reachable.")
-                    .font(.system(size: 12))
-                Spacer()
-            }
-            .padding(8)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        HStack(spacing: 6) {
+            Image(systemName: checks.reachableSpaceCount > 0 ? "rectangle.3.group" : "exclamationmark.triangle.fill")
+                .foregroundColor(checks.reachableSpaceCount > 0 ? .secondary : .orange)
+            Text("\(checks.spaceCount) Space\(checks.spaceCount == 1 ? "" : "s"), \(checks.reachableSpaceCount) reachable")
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
         }
     }
 
