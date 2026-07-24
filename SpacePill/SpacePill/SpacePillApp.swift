@@ -11,6 +11,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var cliServer: CLIServer?
 
     private var preferencesWindow: NSWindow?
+    private var setupWindow: NSWindow?
     private var signalSources: [DispatchSourceSignal] = []
     
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -43,6 +44,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                                notesManager: notesManager)
         server.start()
         cliServer = server
+
+        // A fresh install has both features switched off and, on stock macOS, no
+        // "Switch to Desktop" shortcuts either -- so the hotkeys do nothing and
+        // there is nothing on screen to say why. Show the guidance once; it is
+        // reachable from the status bar menu ever after.
+        if settingsManager.isFirstLaunch {
+            Log.app.info("First launch: showing the Setup window")
+            showSetupWindow()
+        }
 
         // Listen for setting changes
         settingsManager.objectWillChange.sink { [weak self] _ in
@@ -144,6 +154,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         Log.hotkeys.debug("setupHotKeys complete")
     }
     
+    /**
+     * Shows the first-run guidance window. Kept alive between showings so the
+     * checks it holds are not thrown away every time it is closed.
+     */
+    @objc func showSetupWindow() {
+        if setupWindow == nil {
+            let view = SetupView(settingsManager: settingsManager)
+            let hostingController = NSHostingController(rootView: view)
+
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 550, height: 640),
+                styleMask: [.titled, .closable, .miniaturizable],
+                backing: .buffered,
+                defer: false
+            )
+            window.title = "SpacePill Setup"
+            window.contentViewController = hostingController
+            window.center()
+            window.isReleasedWhenClosed = false
+            setupWindow = window
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+        setupWindow?.makeKeyAndOrderFront(nil)
+    }
+
     /**
      * Manually creates and shows a window for Preferences.
      */

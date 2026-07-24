@@ -134,10 +134,26 @@ class SettingsManager: ObservableObject {
     }()
     
     private var isUpdating = false
-    
+
+    /**
+     * True when no settings file existed at launch -- i.e. a genuinely fresh
+     * install rather than a user who has simply never changed anything.
+     *
+     * `load()` writes the file on that first run, so this is false ever after,
+     * which is what keeps the Setup window from becoming a nag.
+     */
+    private(set) var isFirstLaunch = false
+
     init() {
         Log.settings.debug("SettingsManager initializing")
+        isFirstLaunch = !FileManager.default.fileExists(atPath: settingsURL.path)
         load()
+        if isFirstLaunch {
+            // `load()` suppresses saves while it runs, so a fresh install would
+            // otherwise leave no file behind until the first settings change --
+            // and every launch until then would look like the first one.
+            save()
+        }
         syncLaunchAtLogin()
     }
 

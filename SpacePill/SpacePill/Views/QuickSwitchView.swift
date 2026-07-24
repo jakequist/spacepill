@@ -1,4 +1,5 @@
 import SwiftUI
+import SpacePillCore
 
 struct QuickSwitchView: View {
     @ObservedObject var settingsManager: SettingsManager
@@ -25,6 +26,13 @@ struct QuickSwitchView: View {
         /// so that re-reading System Settings actually re-renders the rows.
         let isReachable: Bool
 
+        /// What the row shows, and therefore what the search matches against:
+        /// an unlabelled space is only findable as "Space N" if we search the
+        /// same string the user is reading.
+        var displayName: String {
+            SpaceSearch.displayName(index: index, label: label)
+        }
+
         /// Why this space can't be jumped to, for the footer hint.
         var unreachableReason: String? {
             guard !isReachable else { return nil }
@@ -48,15 +56,13 @@ struct QuickSwitchView: View {
             )
         }
         
-        if searchText.isEmpty {
-            return items
-        }
-        
-        return items.filter { item in
-            let labelMatch = item.label?.localizedCaseInsensitiveContains(searchText) ?? false
-            let indexMatch = String(item.index) == searchText
-            return labelMatch || indexMatch
-        }
+        // Fuzzy, ranked, and deterministic -- see SpacePillCore.SpaceSearch.
+        // Best match first, so resetting selectedIndex to 0 on every keystroke
+        // lands on the row the user most likely meant.
+        return SpaceSearch.rank(items,
+                                query: searchText,
+                                index: { $0.index },
+                                displayName: { $0.displayName })
     }
     
     var body: some View {
@@ -94,7 +100,7 @@ struct QuickSwitchView: View {
                                 .clipShape(Circle())
                                 .overlay(Circle().stroke(Color.black.opacity(0.2), lineWidth: 1))
 
-                            Text(item.label ?? "Space \(item.index)")
+                            Text(item.displayName)
                                 .font(.system(size: 14, weight: index == selectedIndex ? .bold : .regular))
 
                             Spacer()

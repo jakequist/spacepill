@@ -112,6 +112,13 @@ class StatusBarController: NSObject, NSPopoverDelegate {
     private func showContextMenu(on sender: NSStatusBarButton) {
         let menu = NSMenu()
         
+        // Above Preferences: this is where someone goes when nothing seems to
+        // work, and the answer is usually a permission or a macOS shortcut
+        // rather than anything in Preferences.
+        let setupItem = NSMenuItem(title: "Setup…", action: #selector(AppDelegate.showSetupWindow), keyEquivalent: "")
+        setupItem.target = appDelegate
+        menu.addItem(setupItem)
+
         let prefsItem = NSMenuItem(title: "Preferences...", action: #selector(AppDelegate.showPreferencesWindow), keyEquivalent: ",")
         prefsItem.target = appDelegate
         menu.addItem(prefsItem)

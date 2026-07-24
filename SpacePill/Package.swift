@@ -13,9 +13,23 @@ let package = Package(
     dependencies: [
     ],
     targets: [
+        // Pure logic with no AppKit, SwiftUI or SkyLight dependency, so it can
+        // be unit tested without a GUI session or private frameworks. Keep it
+        // that way: anything that needs a window or a CGS connection belongs in
+        // the app target.
+        .target(
+            name: "SpacePillCore",
+            path: "SpacePillCore"
+        ),
+        .testTarget(
+            name: "SpacePillCoreTests",
+            dependencies: ["SpacePillCore"],
+            path: "SpacePillCoreTests"
+        ),
         .executableTarget(
             name: "SpacePill",
             dependencies: [
+                "SpacePillCore"
             ],
             path: "SpacePill",
             exclude: ["Resources/Info.plist"],
