@@ -78,7 +78,13 @@ if [ -n "$APPLE_IDENTITY" ]; then
         echo "✅ Notarization complete."
     fi
 else
-    echo "⚠️ Skipping signing: APPLE_IDENTITY not set."
+    # No Developer ID: ad-hoc sign so the app still launches. An unsigned Mach-O
+    # will not run at all on Apple Silicon, so "unsigned" has to mean ad-hoc, not
+    # nothing. Gatekeeper will still warn and this cannot be notarized -- that is
+    # what makes it a developer preview rather than a shippable build.
+    echo "⚠️ No APPLE_IDENTITY; ad-hoc signing (developer preview, not notarizable)."
+    codesign --force --sign - "$APP_BUNDLE/Contents/Helpers/spacepill"
+    codesign --force --sign - "$APP_BUNDLE"
 fi
 
 # 6. Create DMG

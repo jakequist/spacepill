@@ -1,0 +1,38 @@
+name: CI
+
+# Fast feedback on every push and PR: does it build, do the tests pass.
+# Releasing is a separate workflow (release.yml) so this stays quick.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.assets/**'
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcode-select -p
+          swift --version
+
+      - name: Build (release config)
+        working-directory: SpacePill
+        run: swift build -c release
+
+      # bin/test.sh points DEVELOPER_DIR at a full Xcode so XCTest resolves --
+      # the same wrapper developers use locally. The runner's default Xcode has it.
+      - name: Test
+        run: ./bin/test.sh

@@ -1,0 +1,62 @@
+name: Deploy site
+
+# Publishes /docs to GitHub Pages (https://jakequist.com/spacepill/) whenever the
+# site or its source screenshots change. Decoupled from releases on purpose: docs
+# fixes ship the moment they land on main, without cutting a version.
+#
+# ONE-TIME SETUP: repo Settings -> Pages -> Build and deployment -> Source ->
+# "GitHub Actions". (Not "Deploy from a branch".)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.assets/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# Allow one concurrent deploy; let an in-progress run finish rather than cancel,
+# so a half-published site is never left live.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Keep docs/assets in step with the canonical screenshots in .assets.
+      # Idempotent: normally a no-op because they're committed already.
+      - name: Sync screenshots into the site
+        run: ./bin/sync-docs-assets.sh
+
+      - name: Guard against absolute links
+        run: |
+          set -euo pipefail
+          # jakequist.com/spacepill/ is a project sub-path, so root-absolute
+          # asset/link references (href="/..." src="/...") 404 in production.
+          if grep -rnE '(href|src)="/[^/]' docs/*.html; then
+            echo "::error::Found root-absolute links in docs/ -- use relative paths."
+            exit 1
+          fi
+          echo "No root-absolute links."
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
