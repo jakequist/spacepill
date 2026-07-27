@@ -51,11 +51,12 @@ jobs:
           fi
           echo "No root-absolute links."
 
-      # enablement: true turns Pages on via the workflow token (permissions:
-      # pages: write below), so no manual repo-settings toggle is needed.
+      # Requires a one-time manual enable: Settings -> Pages -> Source ->
+      # "GitHub Actions". The workflow token cannot create the Pages site itself
+      # on this repo, so `enablement: true` is intentionally not set -- it would
+      # fail with a confusing "not accessible by integration" instead of the
+      # clear "verify that the repository has Pages enabled" this produces.
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

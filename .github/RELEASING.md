@@ -77,10 +77,11 @@ the runner is torn down; the private key never persists.
 
 ## One-time repo settings
 
-1. **Pages:** nothing to do — `pages.yml` self-enables Pages (GitHub Actions
-   source) via `configure-pages` with `enablement: true`, using the workflow
-   token. If your org disables that, flip Settings → Pages → Source → **GitHub
-   Actions** by hand.
+1. **Pages (required once):** Settings → Pages → Source → **GitHub Actions**.
+   The workflow can't create the Pages site itself on this repo (the token isn't
+   allowed to), so until you flip this, `pages.yml` fails with *"verify that the
+   repository has Pages enabled"*. After enabling, re-run the workflow or push
+   any `docs/` change.
 2. **Custom domain:** `jakequist.com/spacepill/` is a project path under your
    user site, so there is no `CNAME` file here and none is wanted. The user-site
    repo owns the domain.
