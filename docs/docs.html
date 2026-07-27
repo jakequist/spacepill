@@ -309,6 +309,21 @@ tccutil reset ListenEvent   com.jake.SpacePill</code></pre>
     <!-- ================= ENABLING FEATURES ================= -->
     <section id="enabling-features">
       <h2>Enabling features in Preferences <a class="anchor" href="#enabling-features">#</a></h2>
+
+      <div class="callout">
+        <p class="callout__title"><span class="tag">Start here</span> The Setup window</p>
+        <p style="margin-bottom:0;">
+          On first launch SpacePill opens a <strong>Setup</strong> window that checks
+          everything on this page at once — both permissions, whether your
+          &ldquo;Switch to Desktop&rdquo; shortcuts are enabled, and whether Quick Switch
+          and Space Notes are on — with a button through to each System Settings pane and
+          inline toggles for the two features. It re-checks whenever you return to it, so
+          you can fix something and watch it turn green. Reopen it any time by
+          <strong>right-clicking the pill &rarr; Setup&hellip;</strong> The manual steps
+          below are what that window automates.
+        </p>
+      </div>
+
       <p>
         Open Preferences by <strong>right-clicking the pill</strong> and choosing
         <strong>Preferences&hellip;</strong>
@@ -462,8 +477,10 @@ tccutil reset ListenEvent   com.jake.SpacePill</code></pre>
         listing every Space across every display, each with its number badge and colour.
       </p>
       <ul>
-        <li>Type part of a <strong>label</strong> to filter case-insensitively.</li>
-        <li>Type an exact <strong>number</strong> to match that Space's index.</li>
+        <li><strong>Fuzzy-match</strong> a label: the matcher is subsequence-based, so
+            <code>dcs</code> finds <em>Docs</em> and <code>eml</code> finds <em>Email</em>.
+            It is case- and accent-insensitive, and ranks the closest match first.</li>
+        <li>Type a <strong>number</strong> to jump straight to that Space's index.</li>
         <li><kbd>&#8593;</kbd> <kbd>&#8595;</kbd> to move, <kbd>&#9166;</kbd> to switch, <kbd>esc</kbd> to dismiss.</li>
       </ul>
 
