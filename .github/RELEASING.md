@@ -77,8 +77,10 @@ the runner is torn down; the private key never persists.
 
 ## One-time repo settings
 
-1. **Pages:** Settings → Pages → Source → **GitHub Actions** (not "Deploy from a
-   branch"). Without this, `pages.yml` has nowhere to publish.
+1. **Pages:** nothing to do — `pages.yml` self-enables Pages (GitHub Actions
+   source) via `configure-pages` with `enablement: true`, using the workflow
+   token. If your org disables that, flip Settings → Pages → Source → **GitHub
+   Actions** by hand.
 2. **Custom domain:** `jakequist.com/spacepill/` is a project path under your
    user site, so there is no `CNAME` file here and none is wanted. The user-site
    repo owns the domain.

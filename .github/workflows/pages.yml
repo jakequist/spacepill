@@ -51,7 +51,11 @@ jobs:
           fi
           echo "No root-absolute links."
 
+      # enablement: true turns Pages on via the workflow token (permissions:
+      # pages: write below), so no manual repo-settings toggle is needed.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
