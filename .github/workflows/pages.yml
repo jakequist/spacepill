@@ -13,7 +13,6 @@ on:
     paths:
       - 'docs/**'
       - '.assets/**'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 # Allow one concurrent deploy; let an in-progress run finish rather than cancel,
