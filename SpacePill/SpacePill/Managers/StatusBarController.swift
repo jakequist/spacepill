@@ -6,8 +6,24 @@ import Combine
  * Manages the SpacePill menu bar item and its associated views.
  */
 class StatusBarController: NSObject, NSPopoverDelegate {
+    /// What the shared popover is currently presenting, if anything.
+    private enum PopoverContent { case quickEdit, quickSwitch }
+
     var statusBarItem: NSStatusItem
     private var popover: NSPopover?
+
+    /**
+     * The single source of truth for "is a popover open, and which one".
+     *
+     * Deliberately *not* `NSPopover.isShown`. After an Esc-driven dismissal the
+     * old code's `if popover?.isShown == true { performClose(); return }` guard
+     * would see a stale `true` and read every subsequent open as a toggle-close
+     * of an already-invisible popover, so the reopen path was silently skipped
+     * and both the hotkey and the pill click "went dead". This flag is set only
+     * where we open, and cleared only where the popover actually closes, so it
+     * cannot get wedged.
+     */
+    private var popoverContent: PopoverContent?
     private var notesWindow: NSWindow?
     private var settingsManager: SettingsManager
     private var spaceManager: SpaceManager
@@ -27,23 +43,28 @@ class StatusBarController: NSObject, NSPopoverDelegate {
         setupStatusBarItem()
         setupSpaceObserver()
         setupResizeObserver()
-        
-        // Initialize popover once
-        setupPopover()
     }
-    
-    private func setupPopover() {
-        popover = NSPopover()
-        popover?.behavior = .transient
-        popover?.delegate = self
-    }
-    
+
+    /**
+     * The popover closed -- either because we closed it, or because the system
+     * dismissed the transient popover (Esc, a click outside, or app
+     * deactivation). Clearing `popoverContent` here is what guarantees the next
+     * open is treated as an open and not as a stale toggle-close.
+     *
+     * Guard on identity: a replaced popover's close callback can arrive after we
+     * have already opened its successor, and must not wipe the new one's state.
+     */
     func popoverDidClose(_ notification: Notification) {
-        // Critical: Clear content view controller to ensure cleanup and avoid leaked event monitors
-        Log.ui.debug("Popover closed, releasing content view controller")
-        popover?.contentViewController = nil
+        let closed = notification.object as? NSPopover
+        // Release the content view controller so its SwiftUI view tears down and
+        // removes any local event monitor it installed.
+        closed?.contentViewController = nil
+        guard closed === popover else { return }
+        Log.ui.debug("Popover closed, clearing popover state")
+        popover = nil
+        popoverContent = nil
     }
-    
+
     private func setupResizeObserver() {
         NotificationCenter.default.addObserver(
             self,
@@ -101,7 +122,7 @@ class StatusBarController: NSObject, NSPopoverDelegate {
     
     @objc func handleAction(_ sender: NSStatusBarButton) {
         let event = NSApp.currentEvent
-        
+
         if event?.type == .rightMouseDown {
             showContextMenu(on: sender)
         } else {
@@ -134,11 +155,9 @@ class StatusBarController: NSObject, NSPopoverDelegate {
     @objc func showNotesWindow() {
         guard settingsManager.isNotesEnabled else { return }
         
-        // Ensure popovers are closed first
-        if popover?.isShown == true {
-            popover?.performClose(nil)
-        }
-        
+        // Ensure any popover is closed first
+        dismissPopover()
+
         if let window = notesWindow, window.isVisible {
             if window.isKeyWindow {
                 window.orderOut(nil)
@@ -216,51 +235,83 @@ class StatusBarController: NSObject, NSPopoverDelegate {
     }
     
     func showQuickEditDialog() {
-        if notesWindow?.isVisible == true {
-            notesWindow?.orderOut(nil)
-        }
-        
-        if popover?.isShown == true {
-            popover?.performClose(nil)
-            return
-        }
-        
-        popover?.contentViewController = NSHostingController(rootView: QuickEditView(
-            settingsManager: settingsManager, 
-            spaceManager: spaceManager,
-            onDismiss: { [weak self] in
-                self?.popover?.performClose(nil)
-            }
-        ))
-        
-        if let button = statusBarItem.button {
-            popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            NSApp.activate(ignoringOtherApps: true)
-        }
+        togglePopover(.quickEdit)
     }
-    
+
     func showQuickSwitchBar() {
+        togglePopover(.quickSwitch)
+    }
+
+    /**
+     * Opens `content`, or -- if that same popover is already open -- closes it.
+     * That is the deliberate hotkey/click toggle. Opening a *different* popover
+     * while one is up replaces it.
+     *
+     * The toggle decision reads our own `popoverContent`, never
+     * `NSPopover.isShown`, so it can never wedge on a stale shown state.
+     */
+    private func togglePopover(_ content: PopoverContent) {
         if notesWindow?.isVisible == true {
             notesWindow?.orderOut(nil)
         }
-        
-        if popover?.isShown == true {
-            popover?.performClose(nil)
+
+        if popoverContent == content {
+            dismissPopover()
             return
         }
-        
-        popover?.contentViewController = NSHostingController(rootView: QuickSwitchView(
-            settingsManager: settingsManager, 
-            spaceManager: spaceManager,
-            onDismiss: { [weak self] in
-                self?.popover?.performClose(nil)
-            }
-        ))
-        
-        if let button = statusBarItem.button {
-            popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            NSApp.activate(ignoringOtherApps: true)
+
+        presentPopover(content)
+    }
+
+    private func presentPopover(_ content: PopoverContent) {
+        guard let button = statusBarItem.button else { return }
+
+        // Tear down anything already up first, then build a brand-new NSPopover.
+        // A fresh instance carries no shown-state from a previous cycle, which is
+        // what makes reopen reliable no matter how the last one was dismissed.
+        dismissPopover()
+
+        let controller: NSViewController
+        switch content {
+        case .quickEdit:
+            controller = NSHostingController(rootView: QuickEditView(
+                settingsManager: settingsManager,
+                spaceManager: spaceManager,
+                onDismiss: { [weak self] in self?.dismissPopover() }
+            ))
+        case .quickSwitch:
+            controller = NSHostingController(rootView: QuickSwitchView(
+                settingsManager: settingsManager,
+                spaceManager: spaceManager,
+                onDismiss: { [weak self] in self?.dismissPopover() }
+            ))
         }
+
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.delegate = self
+        popover.contentViewController = controller
+        self.popover = popover
+        self.popoverContent = content
+
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    /**
+     * Closes the shared popover and clears our state immediately. Safe to call
+     * when nothing is open. State is cleared up front so a reopen fired right
+     * after can never be misread as a toggle-close; the animated close then runs
+     * and its `popoverDidClose` is a no-op for state (identity guard).
+     */
+    private func dismissPopover() {
+        guard let popover = popover else {
+            popoverContent = nil
+            return
+        }
+        self.popover = nil
+        self.popoverContent = nil
+        popover.performClose(nil)
     }
 }
 

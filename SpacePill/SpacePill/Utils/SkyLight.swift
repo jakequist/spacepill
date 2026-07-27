@@ -1,5 +1,6 @@
 import Foundation
 import CoreGraphics
+import SpacePillCore
 
 typealias CGSConnectionID = Int32
 typealias CGSSpaceID = UInt64
@@ -44,8 +45,13 @@ class SkyLight {
             
             if let spaces = display["Spaces"] as? [[String: Any]] {
                 for space in spaces {
-                    if let id64 = space["id64"] as? UInt64,
-                       let uuid = space["uuid"] as? String {
+                    // id64 is the gate, not uuid: SkyLight reports an empty uuid
+                    // for Desktop 1 on some Macs, and dropping such a space would
+                    // both hide it and shift every later index. Instead we derive
+                    // a stable, non-empty key from id64 (see SpaceIdentity), so no
+                    // config is ever stored under the "" key.
+                    if let id64 = space["id64"] as? UInt64 {
+                        let uuid = SpaceIdentity.key(rawUUID: space["uuid"] as? String, id64: id64)
                         allMetadata.append(SpaceMetadata(index: globalIndex, id: id64, uuid: uuid, displayUUID: displayUUID))
                         globalIndex += 1
                     }

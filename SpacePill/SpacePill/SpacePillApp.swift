@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Combine
+import SpacePillCore
 
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var settingsManager = SettingsManager()
@@ -32,7 +33,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSApp.setActivationPolicy(.accessory)
         
         statusBarController = StatusBarController(settingsManager, spaceManager, notesManager, self)
-        
+
+        migrateLegacyEmptyUUIDConfig()
+
         setupHotKeys()
         setupSignalHandlers()
 
@@ -62,6 +65,38 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }.store(in: &cancellables)
     }
     
+    /**
+     * One-time migration of the legacy `""` config bucket.
+     *
+     * Older builds keyed a Space whose SkyLight UUID was empty under the `""`
+     * key. `SkyLight` now derives a stable, non-empty key from `id64` for such
+     * Spaces (see `SpaceIdentity`), so an existing `""` entry -- e.g. the
+     * "Inbox" label on Desktop 1 on this machine -- would otherwise be orphaned.
+     *
+     * Re-key it onto the current empty-UUID Space's synthesised key. If there is
+     * no empty-UUID Space right now, or the target already has a config, the
+     * legacy entry is left untouched so a later launch can still claim it and no
+     * existing config is ever lost.
+     */
+    private func migrateLegacyEmptyUUIDConfig() {
+        guard let legacy = settingsManager.spaceConfigs[""] else { return }
+
+        let synthetic = SkyLight.getAllSpacesMetadata()
+            .first { SpaceIdentity.isSynthetic($0.uuid) }
+        guard let target = synthetic else {
+            Log.settings.notice("Legacy empty-UUID config present but no empty-UUID space found; leaving it in place")
+            return
+        }
+
+        var configs = settingsManager.spaceConfigs
+        if configs[target.uuid] == nil {
+            configs[target.uuid] = legacy
+        }
+        configs.removeValue(forKey: "")
+        settingsManager.spaceConfigs = configs
+        Log.settings.info("Migrated legacy empty-UUID space config to \(target.uuid, privacy: .public)")
+    }
+
     private func setupSignalHandlers() {
         let signals = [SIGINT, SIGTERM]
         for sig in signals {
