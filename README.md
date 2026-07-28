@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://jakequist.com/spacepill/">Documentation</a> ·
+  <a href="https://jakequist.github.io/spacepill/">Documentation</a> ·
   <a href="https://github.com/jakequist/spacepill/releases">Download</a> ·
   <a href="#-required-setup">Required setup</a> ·
   <a href="#-prior-art">Prior art</a>
@@ -221,7 +221,7 @@ spacepill doctor    # checks permissions and Desktop shortcuts
 
 The CLI is under active development and its exact subcommands and flags may
 still change — treat `spacepill help` and the
-[documentation site](https://jakequist.com/spacepill/) as the source of truth
+[documentation site](https://jakequist.github.io/spacepill/) as the source of truth
 rather than this README.
 
 ---

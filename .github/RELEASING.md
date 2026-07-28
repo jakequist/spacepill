@@ -82,9 +82,11 @@ the runner is torn down; the private key never persists.
    allowed to), so until you flip this, `pages.yml` fails with *"verify that the
    repository has Pages enabled"*. After enabling, re-run the workflow or push
    any `docs/` change.
-2. **Custom domain:** `jakequist.com/spacepill/` is a project path under your
-   user site, so there is no `CNAME` file here and none is wanted. The user-site
-   repo owns the domain.
+2. **URL:** the site publishes at the default
+   **`https://jakequist.github.io/spacepill/`** — no custom domain and no `CNAME`
+   file. (`jakequist.com` is a separate Vercel site, unrelated to GitHub Pages.)
+   If you ever want SpacePill under a custom domain, that's a Pages custom-domain
+   setup, distinct from Vercel.
 3. **Branch protection:** the release job pushes the version bump and cask commit
    straight to `main`. If you protect `main`, allow `github-actions[bot]` to
    bypass, or the release will fail at the push step.
