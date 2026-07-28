@@ -22,6 +22,8 @@ files=(
     preferences.png
     setup-shortcuts.png
     demo-switch.gif
+    demo.gif
+    demo.mp4
     logo.png
 )
 

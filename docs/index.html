@@ -80,30 +80,6 @@
     </div>
   </section>
 
-  <!-- ============ THE BIG SETUP WARNING ============ -->
-  <section class="wrap" style="padding-bottom: clamp(.5rem,2vw,1rem);">
-    <div class="callout callout--critical">
-      <h2 class="callout__title" style="font-size:1.25rem;">
-        <span class="tag">Required setup</span>
-        macOS ships the &ldquo;Switch to Desktop&rdquo; shortcuts turned <em>off</em>
-      </h2>
-      <p>
-        There is no API for changing Spaces on macOS. SpacePill's Quick Switch works by
-        replaying your own <strong>Switch to Desktop&nbsp;N</strong> keyboard shortcuts —
-        and on a stock Mac none of them are bound. Until you turn them on,
-        <strong>Quick Switch cannot move you anywhere at all.</strong>
-      </p>
-      <p style="margin-bottom:.6em;">Enable them once, here:</p>
-      <p>
-        <span class="path">System&nbsp;Settings &rarr; Keyboard &rarr; Keyboard&nbsp;Shortcuts &rarr; Mission&nbsp;Control &rarr; &ldquo;Switch to Desktop&nbsp;1&hellip;N&rdquo;</span>
-      </p>
-      <p style="margin-bottom:0;">
-        Tick a checkbox for every Desktop you want to be able to jump to.
-        <a href="./docs.html#required-setup">Full walkthrough, including why Spaces&nbsp;11+ can never be reached &rarr;</a>
-      </p>
-    </div>
-  </section>
-
   <!-- ============ WHY ============ -->
   <section class="section">
     <div class="wrap">
@@ -146,6 +122,26 @@
           </p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ DEMO ============ -->
+  <section class="section">
+    <div class="wrap" style="text-align:center;">
+      <p class="eyebrow">See it in action</p>
+      <h2>Type a few letters, land on the right Space</h2>
+      <p class="lede" style="margin:0 auto 2rem; max-width:44ch;">
+        Fuzzy-match a Space by name and jump straight to it &mdash; the pill changes
+        colour and label to match.
+      </p>
+      <video src="./assets/demo.mp4" autoplay loop muted playsinline
+             poster="./assets/quick-switch.png"
+             style="width:100%; max-width:820px; border-radius:14px; box-shadow:0 18px 50px rgba(0,0,0,.28);"
+             aria-label="Jumping between colour-coded Spaces by fuzzy-typing their names.">
+        <img src="./assets/demo.gif" loading="lazy" decoding="async"
+             style="width:100%; max-width:820px; border-radius:14px;"
+             alt="Animation of jumping between colour-coded Spaces by fuzzy-typing their names.">
+      </video>
     </div>
   </section>
 
@@ -236,23 +232,26 @@
 
       <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-top:1.6rem;">
         <div class="card">
-          <h3 style="margin-top:0;">Homebrew</h3>
+          <h3 style="margin-top:0;">Install script <span class="small muted">(recommended)</span></h3>
           <div class="codeblock">
             <div class="codeblock__label">Terminal</div>
-<pre><code>brew tap jakequist/spacepill https://github.com/jakequist/spacepill
-brew install spacepill</code></pre>
+<pre><code>curl -fsSL https://jakequist.github.io/spacepill/install.sh | sh</code></pre>
           </div>
-          <p>Installs <code>SpacePill.app</code> into <code>/Applications</code>.</p>
+          <p>
+            Downloads the latest signed release, installs
+            <code>SpacePill.app</code> into <code>/Applications</code>, launches it, and
+            adds the optional <code>spacepill</code> CLI. macOS only.
+          </p>
         </div>
 
         <div class="card">
           <h3 style="margin-top:0;">Direct download</h3>
           <p>
-            Grab the signed and notarised <code>SpacePill.dmg</code> from the releases
-            page and drag it to Applications.
+            Grab the signed and notarised <code>SpacePill.dmg</code> from the latest
+            release and drag it to Applications.
           </p>
           <p style="margin-top:1.1rem;">
-            <a class="btn btn--primary" href="https://github.com/jakequist/spacepill/releases">Latest release &rarr;</a>
+            <a class="btn btn--primary" href="https://github.com/jakequist/spacepill/releases/latest">Latest release &rarr;</a>
           </p>
         </div>
       </div>
@@ -277,7 +276,7 @@ cd spacepill
     <div class="wrap">
       <p class="eyebrow">Getting started</p>
       <h2>Five minutes, once</h2>
-      <p class="lede">Step&nbsp;3 is the one everybody misses. Don't skip it.</p>
+      <p class="lede">On first launch a Setup window walks you through everything below.</p>
 
       <ol class="steps">
         <li>
@@ -288,6 +287,16 @@ cd spacepill
           </p>
         </li>
         <li>
+          <h3>Let the Setup window guide you</h3>
+          <p>
+            On first launch SpacePill opens a <strong>Setup</strong> window that checks
+            everything for you: the two permissions, whether the &ldquo;Switch to
+            Desktop&rdquo; shortcuts are on, and whether Quick Switch and Space Notes are
+            enabled — with a button through to each System Settings pane. Reopen it any
+            time from the pill's right-click menu.
+          </p>
+        </li>
+        <li>
           <h3>Grant the permissions it asks for</h3>
           <p>
             <strong>Accessibility</strong> lets SpacePill post the keystrokes that change
@@ -295,20 +304,6 @@ cd spacepill
             instant a switch begins. Both live under System&nbsp;Settings &rarr;
             Privacy&nbsp;&amp;&nbsp;Security.
             <a href="./docs.html#permissions">What breaks without each &rarr;</a>
-          </p>
-        </li>
-        <li class="step--alert">
-          <h3>Turn on the &ldquo;Switch to Desktop&rdquo; shortcuts &mdash; they are off by default</h3>
-          <p>
-            Open <span class="path">System&nbsp;Settings &rarr; Keyboard &rarr; Keyboard&nbsp;Shortcuts &rarr; Mission&nbsp;Control</span>
-            and tick <strong>Switch to Desktop&nbsp;1</strong> through however many
-            Desktops you use. SpacePill drives these shortcuts; with none of them enabled
-            Quick Switch is inert, no matter what permissions you have granted.
-          </p>
-          <p style="margin-bottom:0;">
-            macOS only defines them for Desktops&nbsp;1&ndash;10, so Spaces&nbsp;11 and
-            beyond can never be jumped to.
-            <a href="./docs.html#required-setup">Details &rarr;</a>
           </p>
         </li>
         <li>

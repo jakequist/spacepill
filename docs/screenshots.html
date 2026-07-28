@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Screenshots — SpacePill</title>
-<meta name="description" content="A visual tour of SpacePill: the menu bar pill, Quick Edit, the Quick Switch bar, Space Notes, Preferences, and the required macOS keyboard shortcut setup.">
+<meta name="description" content="A visual tour of SpacePill: the menu bar pill, Quick Edit, the Quick Switch bar, Space Notes, Preferences, and the macOS keyboard shortcuts the Setup window helps you enable.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./assets/spacepill.css">
@@ -37,8 +37,8 @@
     <h1>SpacePill, one screen at a time</h1>
     <p class="lede">
       Six surfaces, in the order you'll meet them: the pill, labelling a Space, jumping to
-      one, the notes panel, Preferences, and the one System Settings screen you have to
-      visit yourself.
+      one, the notes panel, Preferences, and the System Settings screen the Setup window
+      points you to.
     </p>
   </section>
 
@@ -79,17 +79,19 @@
 
         <figure class="shot">
           <div class="shot__frame">
-            <img src="./assets/demo-switch.gif"
-                 width="900" height="120" loading="lazy" decoding="async"
-                 alt="Animation of the menu bar pill changing colour, number and label as the user switches between Spaces.">
+            <video src="./assets/demo.mp4" width="900" autoplay loop muted playsinline
+                   poster="./assets/quick-switch.png"
+                   aria-label="Jumping between colour-coded Spaces by fuzzy-typing their names.">
+              <img src="./assets/demo.gif" loading="lazy" decoding="async"
+                   alt="Animation of jumping between colour-coded Spaces by fuzzy-typing their names; the menu bar pill changes colour and label to match.">
+            </video>
           </div>
           <figcaption>
-            <strong>It changes as you switch</strong>
-            With Input Monitoring granted, SpacePill notices the
-            <kbd>&#8963;</kbd><kbd>&#8592;</kbd> / <kbd>&#8963;</kbd><kbd>&#8594;</kbd>
-            keypress and updates the pill at the <em>start</em> of the macOS transition
-            animation rather than roughly a second later. Without that permission it still
-            tracks correctly, just a beat behind.
+            <strong>Jump by name</strong>
+            Open the switcher with <kbd>&#8984;</kbd><kbd>&#8679;</kbd><kbd>J</kbd> and type
+            part of a Space's label &mdash; it fuzzy-matches, so <code>dcs</code> finds
+            <em>Docs</em>. Press <kbd>&#9166;</kbd> and the pill changes to match. The pill
+            also updates on its own whenever you switch Spaces any other way.
           </figcaption>
         </figure>
       </div>
@@ -219,7 +221,7 @@
             <strong>Quick Switch and Space Notes ship switched off</strong> — their hotkeys
             are not registered until you tick them here, and their hotkey rows only appear
             once you do. If no &ldquo;Switch to Desktop&rdquo; shortcut is enabled in macOS,
-            this window also shows a warning with a button that opens the right System
+            this window also shows a reminder with a button that opens the right System
             Settings pane.
           </figcaption>
         </figure>
@@ -230,21 +232,13 @@
   <!-- ============ REQUIRED SETUP ============ -->
   <section class="section section--tint" aria-labelledby="h-setup">
     <div class="wrap">
-      <h2 id="h-setup"><span class="marker" aria-hidden="true">6</span> The setup step everyone misses</h2>
-
-      <div class="callout callout--critical" style="margin-top:1.4rem;">
-        <p class="callout__title" style="font-size:1.1rem;">
-          <span class="tag">Required</span>
-          These checkboxes are off by default, and Quick Switch is dead without them
-        </p>
-        <p style="margin-bottom:0;">
-          macOS has no API for changing Spaces, so SpacePill replays your own
-          <strong>Switch to Desktop&nbsp;N</strong> shortcuts. Enable them under
-          <span class="path">System&nbsp;Settings &rarr; Keyboard &rarr; Keyboard&nbsp;Shortcuts &rarr; Mission&nbsp;Control</span>,
-          one per Desktop you want to jump to.
-          <a href="./docs.html#required-setup">Full walkthrough &rarr;</a>
-        </p>
-      </div>
+      <h2 id="h-setup"><span class="marker" aria-hidden="true">6</span> The keyboard shortcuts that power switching</h2>
+      <p class="lede">
+        macOS has no API for changing Spaces, so SpacePill replays your own
+        <strong>Switch to Desktop&nbsp;N</strong> shortcuts. They live in Keyboard
+        Shortcuts, and SpacePill's Setup window helps you turn them on if any are off.
+        <a href="./docs.html#required-setup">How switching works &rarr;</a>
+      </p>
 
       <div class="shots" style="margin-top:2rem;">
         <figure class="shot">

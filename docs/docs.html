@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Documentation — SpacePill</title>
-<meta name="description" content="Install SpacePill, grant the right permissions, enable the required macOS Switch to Desktop shortcuts, and learn the hotkeys, the CLI, and the settings file format.">
+<meta name="description" content="Install SpacePill, grant the permissions it asks for, and learn the hotkeys, how switching between Spaces works, the CLI, and the settings file format.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./assets/spacepill.css">
@@ -37,7 +37,7 @@
     <ol>
       <li><a href="#requirements">Requirements</a></li>
       <li><a href="#installation">Installation</a></li>
-      <li><a href="#required-setup">Required setup</a></li>
+      <li><a href="#required-setup">Switching between Spaces</a></li>
       <li><a href="#permissions">Permissions</a></li>
       <li><a href="#enabling-features">Enabling features</a></li>
       <li><a href="#hotkeys">Hotkey reference</a></li>
@@ -62,17 +62,6 @@
       It is a single native executable with no third-party dependencies.
     </p>
 
-    <div class="callout callout--critical" style="margin-top:2rem;">
-      <p class="callout__title" style="font-size:1.1rem;">
-        <span class="tag">Read first</span>
-        Quick Switch does nothing until you enable macOS's Desktop shortcuts
-      </p>
-      <p style="margin-bottom:0;">
-        They are disabled on every fresh macOS install and SpacePill cannot enable them for
-        you. <a href="#required-setup">Jump to the setup steps &darr;</a>
-      </p>
-    </div>
-
     <!-- ================= REQUIREMENTS ================= -->
     <section id="requirements">
       <h2>Requirements <a class="anchor" href="#requirements">#</a></h2>
@@ -82,7 +71,7 @@
             <tr><th scope="row">Operating system</th><td>macOS 13 Ventura or later</td></tr>
             <tr><th scope="row">Architecture</th><td>Apple silicon and Intel</td></tr>
             <tr><th scope="row">Permissions</th><td>Accessibility (required for switching), Input Monitoring (optional, for responsiveness)</td></tr>
-            <tr><th scope="row">System configuration</th><td>&ldquo;Switch to Desktop&nbsp;N&rdquo; shortcuts enabled &mdash; <a href="#required-setup">see below</a></td></tr>
+            <tr><th scope="row">System configuration</th><td>macOS &ldquo;Switch to Desktop&nbsp;N&rdquo; shortcuts, which the Setup window helps you turn on &mdash; <a href="#required-setup">see below</a></td></tr>
             <tr><th scope="row">Disk footprint</th><td>The app, plus plain text files under <code>~/.spacepill/</code></td></tr>
             <tr><th scope="row">Network</th><td>None. SpacePill contains no networking code.</td></tr>
           </tbody>
@@ -94,27 +83,24 @@
     <section id="installation">
       <h2>Installation <a class="anchor" href="#installation">#</a></h2>
 
-      <h3>Homebrew</h3>
+      <h3>Install script <span class="muted" style="font-weight:400;">(recommended)</span></h3>
       <div class="codeblock">
         <div class="codeblock__label">Terminal</div>
-<pre><code>brew tap jakequist/spacepill https://github.com/jakequist/spacepill
-brew install spacepill</code></pre>
+<pre><code>curl -fsSL https://jakequist.github.io/spacepill/install.sh | sh</code></pre>
       </div>
       <p>
-        The cask installs <code>SpacePill.app</code> into <code>/Applications</code>.
-        Update it later with:
+        Downloads the latest signed release, installs <code>SpacePill.app</code> into
+        <code>/Applications</code>, launches it, and adds the optional
+        <code>spacepill</code> CLI. macOS only.
       </p>
-      <div class="codeblock">
-        <div class="codeblock__label">Terminal</div>
-<pre><code>brew update &amp;&amp; brew upgrade --cask spacepill</code></pre>
-      </div>
 
       <h3>Direct download</h3>
       <p>
         Download <code>SpacePill.dmg</code> from the
-        <a href="https://github.com/jakequist/spacepill/releases">releases page</a>, open
-        it, and drag <strong>SpacePill</strong> into Applications. Release builds are
-        signed and notarised, so Gatekeeper opens them without a right-click dance.
+        <a href="https://github.com/jakequist/spacepill/releases/latest">latest release</a>,
+        open it, and drag <strong>SpacePill</strong> into Applications. Release builds are
+        signed and notarised by Developer&nbsp;ID: Quist&nbsp;Software, so they open
+        cleanly.
       </p>
 
       <h3>Build from source</h3>
@@ -149,68 +135,36 @@ cd spacepill
 
     <!-- ================= REQUIRED SETUP ================= -->
     <section id="required-setup">
-      <h2>Required setup: the &ldquo;Switch to Desktop&rdquo; shortcuts <a class="anchor" href="#required-setup">#</a></h2>
+      <h2>Switching between Spaces <a class="anchor" href="#required-setup">#</a></h2>
 
-      <div class="callout callout--critical">
-        <p class="callout__title" style="font-size:1.15rem;">
-          <span class="tag">Critical</span>
-          macOS ships these shortcuts disabled. Quick Switch cannot work without them.
-        </p>
-        <p>
-          macOS exposes no public or private API for activating a Space. The only way any
-          app can move you to a Desktop is to press the keys you would press yourself, so
-          SpacePill replays your own <strong>Switch to Desktop&nbsp;N</strong> shortcut. On a
-          stock Mac, none of those shortcuts are bound to anything — which means a
-          brand-new install of SpacePill <strong>cannot change Spaces at all</strong>, no
-          matter which permissions you have granted.
-        </p>
-        <p style="margin-bottom:.4em;"><strong>Fix it once:</strong></p>
-        <ol style="margin-bottom:.8em;">
-          <li>Open <span class="path">System&nbsp;Settings &rarr; Keyboard</span></li>
-          <li>Click <strong>Keyboard Shortcuts&hellip;</strong></li>
-          <li>Select <strong>Mission Control</strong> in the sidebar</li>
-          <li>Expand <strong>Mission Control</strong> in the list if it is collapsed</li>
-          <li>Tick the checkbox for <strong>Switch to Desktop&nbsp;1</strong>, <strong>Switch to Desktop&nbsp;2</strong>, &hellip; — one for every Desktop you want to jump to</li>
-          <li>Click <strong>Done</strong>, then reopen the Quick Switch Bar</li>
-        </ol>
-        <p style="margin-bottom:0;">
-          SpacePill re-reads this configuration every time you open Quick Switch or
-          Preferences, so the change takes effect immediately — no relaunch needed.
-          Preferences also shows a warning box while no shortcut is enabled, with a button
-          that opens the right settings pane.
-        </p>
-      </div>
-
+      <p>
+        macOS exposes no API for activating a Space, so the only way any app can move you
+        to a Desktop is to press the keys you would press yourself. SpacePill replays your
+        own <strong>Switch to Desktop&nbsp;N</strong> keyboard shortcuts. These live under
+        <span class="path">System&nbsp;Settings &rarr; Keyboard &rarr; Keyboard&nbsp;Shortcuts &rarr; Mission&nbsp;Control</span>,
+        one checkbox per Desktop. SpacePill's <strong>Setup</strong> window checks whether
+        they are on and, if any are off, walks you through enabling them with a button
+        straight to the right pane.
+      </p>
+      <p>
+        If you'd rather do it by hand: open Keyboard Shortcuts, select
+        <strong>Mission Control</strong>, and tick <strong>Switch to Desktop&nbsp;1</strong>,
+        <strong>Switch to Desktop&nbsp;2</strong>, and so on — one for every Desktop you
+        want to jump to. SpacePill re-reads this configuration every time you open Quick
+        Switch or Preferences, so changes take effect immediately, with no relaunch.
+      </p>
       <p>
         The default binding is <kbd>&#8963;</kbd> plus the Desktop number
         (<kbd>&#8963;</kbd> <kbd>1</kbd>, <kbd>&#8963;</kbd> <kbd>2</kbd>, &hellip;), but
         you may bind anything you like. SpacePill reads whatever you actually configured
         and replays that, so rebinding is safe.
       </p>
-
-      <h3>Spaces 11 and beyond can never be reached</h3>
-      <p>
-        macOS only defines ten of these shortcuts — internally they are symbolic hotkey IDs
-        118 through 127, meaning &ldquo;Switch to Desktop 1&rdquo; through &ldquo;Switch to
-        Desktop 10&rdquo;. There is no eleventh. If you have more than ten Spaces, the ones
-        past the tenth have no shortcut to replay and are therefore unreachable by any app,
-        SpacePill included.
+      <p class="small muted">
+        macOS defines these shortcuts only for Desktops&nbsp;1&ndash;10, so Spaces past the
+        tenth have no shortcut to replay. Quick Switch greys those rows out and explains why
+        in the footer hint rather than posting a keystroke that would land you somewhere
+        arbitrary.
       </p>
-      <p>
-        Rather than pretending, Quick Switch greys those rows out, marks them with a
-        &ldquo;no entry&rdquo; symbol and explains why in the footer hint. Pressing
-        <kbd>&#9166;</kbd> on one does nothing instead of posting a keystroke that would
-        land you somewhere arbitrary.
-      </p>
-      <div class="callout callout--note">
-        <p class="callout__title"><span class="tag">Why not step there?</span></p>
-        <p style="margin-bottom:0;">
-          Walking to Desktop 12 with repeated <kbd>&#8963;</kbd><kbd>&#8594;</kbd> presses
-          was tried and removed. Each native transition takes about half a second and
-          swallows arrow keys posted while it is in flight, so multi-step hops reliably
-          landed on the wrong Space. Refusing is more useful than guessing.
-        </p>
-      </div>
 
       <h3>Checking what macOS thinks is enabled</h3>
       <p>
@@ -328,7 +282,7 @@ tccutil reset ListenEvent   com.jake.SpacePill</code></pre>
         Open Preferences by <strong>right-clicking the pill</strong> and choosing
         <strong>Preferences&hellip;</strong>
       </p>
-      <div class="callout callout--warn">
+      <div class="callout">
         <p class="callout__title"><span class="tag">Default off</span> Quick Switch and Space Notes start disabled</p>
         <p style="margin-bottom:0;">
           Their global hotkeys are not registered until you tick
@@ -499,7 +453,7 @@ tccutil reset ListenEvent   com.jake.SpacePill</code></pre>
           <tbody>
             <tr>
               <td>&ldquo;Enable <em>Switch to Desktop&nbsp;N</em> in Keyboard Shortcuts to jump here&rdquo;</td>
-              <td>Tick that Desktop's checkbox — see <a href="#required-setup">Required setup</a>.</td>
+              <td>Tick that Desktop's checkbox — see <a href="#required-setup">Switching between Spaces</a>.</td>
             </tr>
             <tr>
               <td>&ldquo;Can't jump here — macOS has no shortcut past Desktop&nbsp;10&rdquo;</td>
@@ -585,7 +539,7 @@ tccutil reset ListenEvent   com.jake.SpacePill</code></pre>
           Switch to a Space by number or by label. Subject to exactly the same constraints
           as the in-app Quick Switch: the corresponding &ldquo;Switch to
           Desktop&nbsp;N&rdquo; shortcut must be enabled, and Desktops past the tenth cannot
-          be reached. See <a href="#required-setup">Required setup</a>.
+          be reached. See <a href="#required-setup">Switching between Spaces</a>.
         </dd>
 
         <dt>Label and colour a Space</dt>
@@ -849,20 +803,6 @@ log show --predicate <span class="tok-s">'subsystem == "com.jake.SpacePill"'</sp
     <section id="uninstall">
       <h2>Uninstall <a class="anchor" href="#uninstall">#</a></h2>
 
-      <h3>If you installed with Homebrew</h3>
-      <div class="codeblock">
-        <div class="codeblock__label">Terminal</div>
-<pre><code>brew uninstall --cask spacepill
-
-<span class="tok-c"># also remove settings and notes:</span>
-brew uninstall --zap --cask spacepill</code></pre>
-      </div>
-      <p class="small muted">
-        <code>--zap</code> additionally trashes <code>~/.spacepill</code> and the legacy
-        <code>~/Library/Preferences/com.jake.SpacePill.plist</code>.
-      </p>
-
-      <h3>If you installed the app manually</h3>
       <div class="codeblock">
         <div class="codeblock__label">Terminal</div>
 <pre><code><span class="tok-c"># 1. Quit SpacePill from the pill's right-click menu, then:</span>
