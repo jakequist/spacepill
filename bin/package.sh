@@ -109,3 +109,20 @@ hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_TEMP_DIR" -ov -format UDZO 
 rm -rf "$DMG_TEMP_DIR"
 
 echo "✅ Created $DMG_PATH"
+
+# 7. Sign, notarize, and staple the DMG itself.
+# The app inside is already notarized+stapled, so it launches cleanly once
+# dragged out. But the DMG a user *downloads* carries a quarantine flag, and an
+# un-notarized DMG still trips Gatekeeper on open. Notarizing and stapling the
+# DMG makes the whole download pristine. Same credential gate as the app.
+if [ -n "$APPLE_IDENTITY" ] && [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ]; then
+    echo "🔏 Signing and notarizing the DMG..."
+    codesign --force --sign "$APPLE_IDENTITY" "$DMG_PATH"
+    xcrun notarytool submit "$DMG_PATH" \
+        --apple-id "$APPLE_ID" \
+        --password "$APPLE_PASSWORD" \
+        --team-id "$APPLE_TEAM_ID" \
+        --wait
+    xcrun stapler staple "$DMG_PATH"
+    echo "✅ DMG notarized and stapled."
+fi
