@@ -40,6 +40,11 @@ jobs:
       - name: Sync screenshots into the site
         run: ./bin/sync-docs-assets.sh
 
+      # Serve the installer at https://jakequist.github.io/spacepill/install.sh
+      # from the single canonical copy at the repo root.
+      - name: Stage installer for the site
+        run: cp install.sh docs/install.sh
+
       - name: Guard against absolute links
         run: |
           set -euo pipefail
