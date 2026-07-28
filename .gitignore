@@ -24,3 +24,4 @@ staging/
 .idea/
 .vscode/
 .envrc
+.env
