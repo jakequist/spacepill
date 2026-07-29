@@ -353,11 +353,13 @@ final class CLIServer {
             throw CommandError("not_found", "No space matching \"\(target)\".")
         }
 
-        // EXPERIMENTAL branch: the direct SkyLight method reaches any Space, so
-        // the old "past Desktop 10 / shortcut not enabled" gates are gone -- the
-        // only requirement is that the Space exists (canSwitchToSpace).
+        guard space.index <= SkyLight.maxSwitchableSpaceIndex else {
+            throw CommandError("unreachable",
+                               "Space \(space.index) is past Desktop \(SkyLight.maxSwitchableSpaceIndex). macOS defines no \"Switch to Desktop\" shortcut beyond that, so it cannot be reached.")
+        }
         guard SkyLight.canSwitchToSpace(index: space.index) else {
-            throw CommandError("not_found", "Space \(space.index) does not exist.")
+            throw CommandError("no_shortcut",
+                               "\"Switch to Desktop \(space.index)\" is not enabled. Turn it on in System Settings > Keyboard > Keyboard Shortcuts > Mission Control.")
         }
 
         guard SkyLight.switchToSpace(index: space.index) else {

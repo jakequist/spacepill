@@ -14,12 +14,6 @@ func SLSGetActiveSpace(_ cid: CGSConnectionID) -> CGSSpaceID
 @_silgen_name("SLSCopyManagedDisplaySpaces")
 func SLSCopyManagedDisplaySpaces(_ cid: CGSConnectionID) -> CFArray?
 
-// EXPERIMENTAL. Sets the active Space of a display directly, the way yabai does
-// it internally. Unlike the keyboard-shortcut method this reaches *any* Space --
-// including Desktop 11+, which macOS defines no shortcut for -- needs none of the
-// "Switch to Desktop" shortcuts enabled, and does not require SIP to be disabled.
-@_silgen_name("SLSManagedDisplaySetCurrentSpace")
-func SLSManagedDisplaySetCurrentSpace(_ cid: CGSConnectionID, _ display: CFString, _ space: CGSSpaceID)
 
 struct SpaceMetadata {
     let index: Int
@@ -91,68 +85,38 @@ class SkyLight {
     static let maxSwitchableSpaceIndex = SpaceShortcuts.maxDesktop
 
     /**
-     * Whether `switchToSpace` can reach this index.
-     *
-     * With the direct SkyLight method (see `switchToSpaceDirect`), any Space that
-     * exists is reachable -- there is no Desktop-10 ceiling and no dependency on
-     * the "Switch to Desktop" shortcuts being enabled. So this is now simply
-     * "does a Space with this index exist".
+     * Whether `switchToSpace` can reach this index: within Desktop 1-10 and with
+     * that Desktop's shortcut enabled. (The >10 experiment did not yield a
+     * reliable switch -- see EXPERIMENT.md.)
      */
     static func canSwitchToSpace(index: Int) -> Bool {
-        guard index >= 1 else { return false }
-        return getAllSpacesMetadata().contains { $0.index == index }
+        guard index >= 1 && index <= maxSwitchableSpaceIndex else { return false }
+        return SpaceShortcuts.shortcut(forDesktop: index) != nil
     }
 
     /**
-     * Switch to a Space by index.
+     * Switch to a Space by index by replaying its "Switch to Desktop N"
+     * shortcut. Reliable and produces a real, clean transition, but only reaches
+     * Desktops 1-10 and only when the shortcut is enabled.
      *
-     * Uses the direct SkyLight call, which reaches any Space (including Desktop
-     * 11+) without the "Switch to Desktop" shortcuts and without disabling SIP.
-     * Falls back to replaying the keyboard shortcut only if the direct call is
-     * somehow unavailable.
+     * NOTE: the >10 experiment (SLSManagedDisplaySetCurrentSpace, and Ctrl+Arrow
+     * stepping via CGEvent) is documented in EXPERIMENT.md. The direct call only
+     * moves the window server's *record*, not the display; CGEvent-posted arrow
+     * keys do not trigger the space-move shortcut the way System Events does.
+     * So we stay on the reliable keyboard path here.
      *
-     * - Returns: `false` if no Space with this index exists.
+     * - Returns: `false` if the Space does not exist or has no usable shortcut.
      */
     @discardableResult
-    static func switchToSpace(index: Int) -> Bool {
+    static func switchToSpace(index target: Int) -> Bool {
         let metadata = getAllSpacesMetadata()
-        guard let target = metadata.first(where: { $0.index == index }) else {
-            Log.spaces.error("Space index \(index, privacy: .public) not found")
+        guard metadata.contains(where: { $0.index == target }) else {
+            Log.spaces.error("Space index \(target, privacy: .public) not found")
             return false
         }
-
-        if switchToSpaceDirect(target: target) {
-            return true
-        }
-        Log.spaces.notice("Direct switch unavailable; falling back to keyboard shortcut")
-        return switchToSpaceViaShortcut(index: index)
-    }
-
-    /**
-     * EXPERIMENTAL: switch directly via `SLSManagedDisplaySetCurrentSpace`.
-     *
-     * This is the mechanism that lifts the Desktop-10 ceiling and removes the
-     * need for the user to enable any macOS shortcut. It sets the display's
-     * current Space at the window-server level.
-     */
-    @discardableResult
-    static func switchToSpaceDirect(target: SpaceMetadata) -> Bool {
-        let cid = SLSMainConnectionID()
-        SLSManagedDisplaySetCurrentSpace(cid, target.displayUUID as CFString, target.id)
-        Log.spaces.info("Direct switch to space \(target.index, privacy: .public) id64=\(target.id, privacy: .public)")
-        return true
-    }
-
-    /**
-     * The original keyboard-shortcut method: replay the user's "Switch to
-     * Desktop N" shortcut. Kept as a fallback; only reaches Desktops 1-10 and
-     * only when the shortcut is enabled.
-     */
-    @discardableResult
-    static func switchToSpaceViaShortcut(index: Int) -> Bool {
-        guard index <= maxSwitchableSpaceIndex,
-              let shortcut = SpaceShortcuts.shortcut(forDesktop: index) else {
-            Log.spaces.notice("No usable 'Switch to Desktop \(index, privacy: .public)' shortcut; not switching")
+        guard target <= maxSwitchableSpaceIndex,
+              let shortcut = SpaceShortcuts.shortcut(forDesktop: target) else {
+            Log.spaces.notice("No usable 'Switch to Desktop \(target, privacy: .public)' shortcut; not switching")
             return false
         }
 
@@ -164,7 +128,7 @@ class SkyLight {
         keyDown?.post(tap: .cghidEventTap)
         keyUp?.post(tap: .cghidEventTap)
 
-        Log.spaces.info("Triggered switch to space \(index, privacy: .public) via keyCode=\(shortcut.keyCode, privacy: .public)")
+        Log.spaces.info("Switch to space \(target, privacy: .public) via shortcut")
         return true
     }
     
