@@ -52,7 +52,10 @@ struct QuickSwitchView: View {
                 index: metadata.index,
                 label: config?.label,
                 color: config?.color,
-                isReachable: reachableDesktops.contains(metadata.index)
+                // EXPERIMENTAL: the direct SkyLight switch reaches every Space,
+                // so nothing is greyed out any more -- no Desktop-10 ceiling,
+                // no shortcut dependency.
+                isReachable: true
             )
         }
         
