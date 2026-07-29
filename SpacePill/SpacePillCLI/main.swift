@@ -152,7 +152,7 @@ func commandList(_ args: Arguments) throws {
 
 func commandSwitch(_ args: Arguments) throws {
     guard let target = args.positional.first else {
-        throw CLIFailure("Usage: spacepill switch <index|label>", .usage)
+        throw CLIFailure("Usage: spacepill jump <number|label>   (aliases: switch, j)", .usage)
     }
 
     let data = try Client.send("switch", ["target": target])
@@ -427,7 +427,8 @@ func commandHelp() {
     COMMANDS
       current [--json]                 Show the space you are on
       list [--json]                    List every space
-      switch <index|label>             Jump to a space
+      jump <number|label>              Jump to a space by number or fuzzy label
+                                       (aliases: switch, j)
       label <text> [--space N] [--color <hex>]
                                        Label the current (or given) space
       label --clear [--space N]        Remove a label and colour
@@ -461,6 +462,8 @@ let allowedFlags: [String: Set<String>] = [
     "current": ["--json"],
     "list": ["--json"],
     "switch": [],
+    "jump": [],
+    "j": [],
     "label": ["--clear"],
     "notes": ["--set", "--edit", "--path"],
     "doctor": [],
@@ -500,7 +503,7 @@ func main() -> Int32 {
         switch command {
         case "current":     try commandCurrent(args)
         case "list":        try commandList(args)
-        case "switch":      try commandSwitch(args)
+        case "switch", "jump", "j": try commandSwitch(args)
         case "label":       try commandLabel(args)
         case "notes":       try commandNotes(args)
         case "doctor":      try commandDoctor()

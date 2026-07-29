@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import ApplicationServices
 import IOKit.hid
+import SpacePillCore
 
 /**
  * A local control channel for the `spacepill` command-line client.
@@ -481,17 +482,17 @@ final class CLIServer {
             return match
         }
 
-        let labelled = metadata.compactMap { space -> (SpaceMetadata, String)? in
-            guard let label = settingsManager.spaceConfigs[space.uuid]?.label, !label.isEmpty else { return nil }
-            return (space, label)
-        }
-
-        if let exact = labelled.first(where: { $0.1.caseInsensitiveCompare(target) == .orderedSame }) {
-            return exact.0
-        }
-
-        let prefixed = labelled.filter { $0.1.lowercased().hasPrefix(target.lowercased()) }
-        return prefixed.count == 1 ? prefixed[0].0 : nil
+        // Fuzzy label match, using the exact same ranked matcher as the Quick
+        // Switch bar (SpacePillCore.SpaceSearch) -- so `jump dpl` finds "Deploy"
+        // by subsequence, just like typing it in the bar. Unlabelled spaces are
+        // matched by their "Space N" display name.
+        let ranked = SpaceSearch.rank(
+            metadata,
+            query: target,
+            index: { $0.index },
+            displayName: { SpaceSearch.displayName(index: $0.index, label: self.settingsManager.spaceConfigs[$0.uuid]?.label) }
+        )
+        return ranked.first
     }
 
     /**
