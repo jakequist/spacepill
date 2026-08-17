@@ -14,6 +14,9 @@ func SLSGetActiveSpace(_ cid: CGSConnectionID) -> CGSSpaceID
 @_silgen_name("SLSCopyManagedDisplaySpaces")
 func SLSCopyManagedDisplaySpaces(_ cid: CGSConnectionID) -> CFArray?
 
+@_silgen_name("SLSCopySpacesForWindows")
+func SLSCopySpacesForWindows(_ cid: CGSConnectionID, _ mask: Int32, _ windowIDs: CFArray) -> CFArray?
+
 struct SpaceMetadata {
     let index: Int
     let id: CGSSpaceID
@@ -74,6 +77,33 @@ class SkyLight {
         
         let activeID = getActiveSpaceID()
         return allSpaces.first { $0.id == activeID }
+    }
+
+    /**
+     * Whether a window configured with `.canJoinAllSpaces` has lost its
+     * server-side "all Spaces" tag.
+     *
+     * After long uptime, macOS can silently strip the sticky tag and pin the
+     * window to one arbitrary Space while AppKit still reports the old
+     * `collectionBehavior` -- so ordering the window front "succeeds" but it only
+     * materialises on that one Space. The visible symptom: the notes panel
+     * flashes during a Space transition and vanishes when it settles.
+     *
+     * A healthy sticky window is a member of *no* specific Space (SkyLight
+     * returns an empty list); any non-empty result means the tag is gone.
+     * Re-setting the same `collectionBehavior` is a no-op in AppKit, so the only
+     * reliable repair is to recreate the window.
+     *
+     * Returns false whenever SkyLight cannot answer, so a failed lookup never
+     * triggers a needless recreate.
+     */
+    static func windowHasLostAllSpacesTag(windowNumber: Int) -> Bool {
+        guard windowNumber > 0 else { return false }
+        let connection = SLSMainConnectionID()
+        guard let spaces = SLSCopySpacesForWindows(connection, 0x7, [windowNumber] as CFArray) as? [UInt64] else {
+            return false
+        }
+        return !spaces.isEmpty
     }
 
     /**

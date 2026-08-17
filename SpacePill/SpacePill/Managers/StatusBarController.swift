@@ -97,12 +97,35 @@ class StatusBarController: NSObject, NSPopoverDelegate {
         let shouldBeOpen = settingsManager.spaceConfigs[uuid]?.isNotesOpen ?? false
         
         if shouldBeOpen {
-            ensureNotesWindowExists()
-            positionNotesWindow()
-            notesWindow?.makeKeyAndOrderFront(nil)
+            presentNotesWindow()
         } else {
             notesWindow?.orderOut(nil)
         }
+    }
+
+    /**
+     * Shows the notes panel on the active Space, healing it first if macOS has
+     * stripped its all-Spaces tag (see `SkyLight.windowHasLostAllSpacesTag`).
+     * All paths that order the panel front must go through here -- a stranded
+     * panel still reports `isVisible`, so without the check it silently "shows"
+     * on a Space the user is not on.
+     */
+    private func presentNotesWindow() {
+        ensureNotesWindowExists()
+        positionNotesWindow()
+        notesWindow?.makeKeyAndOrderFront(nil)
+
+        guard let window = notesWindow,
+              SkyLight.windowHasLostAllSpacesTag(windowNumber: window.windowNumber) else { return }
+
+        Log.ui.info("Notes panel lost its all-Spaces tag; recreating it")
+        window.orderOut(nil)
+        // Release the hosting controller so the old SwiftUI view tears down.
+        window.contentViewController = nil
+        notesWindow = nil
+        ensureNotesWindowExists()
+        positionNotesWindow()
+        notesWindow?.makeKeyAndOrderFront(nil)
     }
     
     private func setupStatusBarItem() {
@@ -166,17 +189,13 @@ class StatusBarController: NSObject, NSPopoverDelegate {
                 }
             } else {
                 NSApp.activate(ignoringOtherApps: true)
-                positionNotesWindow()
-                window.makeKeyAndOrderFront(nil)
+                presentNotesWindow()
             }
             return
         }
-        
-        ensureNotesWindowExists()
-        
+
         NSApp.activate(ignoringOtherApps: true)
-        positionNotesWindow()
-        notesWindow?.makeKeyAndOrderFront(nil)
+        presentNotesWindow()
         
         if let uuid = spaceManager.visualSpaceUUID ?? spaceManager.currentSpaceUUID {
             settingsManager.setNotesOpen(for: uuid, isOpen: true)
