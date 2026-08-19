@@ -3,18 +3,14 @@ import Foundation
 /**
  * `spacepill update`.
  *
- * Two worlds, and they are not equally safe:
- *
- *  - Installed by Homebrew: hand the whole job to `brew upgrade --cask`, which
- *    already checksums the download. This is the path we want people on.
- *  - Installed by dragging a DMG: SpacePill has to fetch and replace itself.
- *    An update mechanism that installs whatever a URL returns is a remote code
- *    execution primitive, so the downloaded app is verified with `codesign
- *    --verify --deep --strict` *and* required to carry a Developer ID authority
- *    before anything is copied anywhere. If either check fails the install is
- *    refused and the user is pointed at the releases page to decide for
- *    themselves. Unsigned releases therefore cannot be auto-installed at all --
- *    that is the intended outcome, not a bug.
+ * SpacePill fetches and replaces itself, and an update mechanism that installs
+ * whatever a URL returns is a remote code execution primitive. So the
+ * downloaded app is verified with `codesign --verify --deep --strict` *and*
+ * required to carry a Developer ID authority before anything is copied
+ * anywhere. If either check fails the install is refused and the user is
+ * pointed at the releases page to decide for themselves. Unsigned releases
+ * therefore cannot be auto-installed at all -- that is the intended outcome,
+ * not a bug.
  */
 enum Updater {
     static let repository = "jakequist/spacepill"
@@ -24,61 +20,7 @@ enum Updater {
     // MARK: - Entry point
 
     static func run(checkOnly: Bool) throws {
-        let current = Install.resolveVersion()
-
-        if let brew = brewPath(), isCaskInstalled(brew: brew) {
-            try updateViaHomebrew(brew: brew, checkOnly: checkOnly, current: current)
-            return
-        }
-
-        try updateViaGitHub(checkOnly: checkOnly, current: current)
-    }
-
-    // MARK: - Homebrew
-
-    private static func brewPath() -> String? {
-        firstExisting(["/opt/homebrew/bin/brew", "/usr/local/bin/brew", "/home/linuxbrew/.linuxbrew/bin/brew"])
-    }
-
-    private static func isCaskInstalled(brew: String) -> Bool {
-        runTool(brew, ["list", "--cask", "spacepill"]).succeeded
-    }
-
-    private static func updateViaHomebrew(brew: String, checkOnly: Bool, current: String) throws {
-        output("Installed via Homebrew (current version \(current)).")
-
-        if checkOnly {
-            let outdated = runTool(brew, ["outdated", "--cask", "spacepill", "--verbose"])
-            let report = outdated.standardOutput.trimmingCharacters(in: .whitespacesAndNewlines)
-
-            // brew exits non-zero for reasons that have nothing to do with the
-            // version -- an untrusted tap, no network, a broken formula. Empty
-            // stdout then means "brew could not tell us", not "up to date", and
-            // reporting the latter would be a lie that hides a real update.
-            guard outdated.succeeded else {
-                warn(outdated.standardError.trimmingCharacters(in: .whitespacesAndNewlines))
-                output("")
-                output("Homebrew could not check for updates. Asking GitHub directly instead.")
-                output("")
-                try updateViaGitHub(checkOnly: true, current: current)
-                return
-            }
-
-            if report.isEmpty {
-                output("SpacePill is up to date.")
-            } else {
-                output(report)
-                output("")
-                output("Run `spacepill update` to install it.")
-            }
-            return
-        }
-
-        output("Running: brew upgrade --cask spacepill")
-        output("")
-        // exec rather than spawn: brew is interactive (it may ask for an admin
-        // password) and owns the terminal from here on.
-        execute(brew, ["upgrade", "--cask", "spacepill"])
+        try updateViaGitHub(checkOnly: checkOnly, current: Install.resolveVersion())
     }
 
     // MARK: - Direct download
@@ -308,14 +250,4 @@ enum Updater {
         }
         return entities.compactMap { $0["mount-point"] as? String }.first
     }
-}
-
-/// Replaces this process. Only returns if the exec itself fails.
-func execute(_ path: String, _ arguments: [String]) -> Never {
-    var argv: [UnsafeMutablePointer<CChar>?] = ([path] + arguments).map { strdup($0) }
-    argv.append(nil)
-    execv(path, &argv)
-
-    warn("Could not run \(path): \(String(cString: strerror(errno)))")
-    exit(ExitCode.failure.rawValue)
 }

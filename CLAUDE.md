@@ -19,7 +19,7 @@ macOS 13+, built and shipped as a `.app` bundle.
 ./bin/logs.sh --last 5m hotkeys   # dump one category
 ./bin/dev-cert.sh           # one-time: stable dev signing identity (see below)
 ./bin/package.sh            # signed/notarised .app + .dmg into staging/
-./bin/release.sh            # tag, package, update Cask, publish GitHub release
+./bin/release.sh            # tag, package, publish GitHub release
 
 # The CLI, from a dev build (it is not on PATH until installed):
 ./staging/SpacePill.app/Contents/Helpers/spacepill doctor
@@ -152,29 +152,26 @@ which silently corrupt the build if you "fix" the names back:
   "launches" by printing CLI help and exiting.
 
 `bin/start.sh` and `bin/package.sh` copy and rename it; both sign the nested
-binary *before* the enclosing bundle. The Cask exposes it with
-`binary "#{appdir}/SpacePill.app/Contents/Helpers/spacepill"`; direct-download
-users run `spacepill install-cli` to symlink it into `/usr/local/bin`.
+binary *before* the enclosing bundle. Users run `spacepill install-cli` to
+symlink it into `/usr/local/bin`.
 
 The CLI has no compiled-in version number: it reads
 `CFBundleShortVersionString` from the bundle two directories above itself
-(resolving symlinks first, since Homebrew puts one on `PATH`), and falls back to
-asking the running app. `./VERSION` stays the only source of truth.
+(resolving symlinks first, since `install-cli` puts one on `PATH`), and falls
+back to asking the running app. `./VERSION` stays the only source of truth.
+
+Distribution is the GitHub release DMG and the `curl | sh` installer only.
+Homebrew was dropped deliberately (v1.3.2) — do not reintroduce a cask, tap, or
+`brew` code path.
 
 ### `spacepill update`
 
-Homebrew installs are handed to `brew upgrade --cask spacepill` via `execv`.
-Everything else compares against the GitHub latest-release API, and for an actual
-install requires **both** `codesign --verify --deep --strict` to pass **and** an
+Updates compare against the GitHub latest-release API, and for an actual
+install require **both** `codesign --verify --deep --strict` to pass **and** an
 `Authority=Developer ID Application:` line before anything is copied. An update
 path that installs whatever a URL returns is a remote code execution primitive;
 refusing an unverifiable build is the feature. Note a self-signed certificate
 passes `--verify` happily — the authority check is the one doing the work.
-
-`brew outdated` exits non-zero for reasons unrelated to the version (untrusted
-tap, no network). Empty stdout then means "brew could not tell us", not "up to
-date"; the code falls back to the GitHub comparison rather than reporting a
-reassuring lie.
 
 ---
 
@@ -359,8 +356,8 @@ debounce over adding more `didSet` writers.
   `bin/package.sh` stamps at build time — do not hand-edit the plist version.
 - The bundle identifier `com.jake.SpacePill` is load-bearing: it is the TCC key
   for both permissions and the `SMAppService` login-item key. Changing it forces
-  every existing user to re-grant permissions. `bin/package.sh`, `bin/logs.sh`,
-  and `CaskTemplate.rb` all derive from or match `Info.plist`; keep them in sync.
+  every existing user to re-grant permissions. `bin/package.sh` and
+  `bin/logs.sh` both derive from or match `Info.plist`; keep them in sync.
 
 ---
 

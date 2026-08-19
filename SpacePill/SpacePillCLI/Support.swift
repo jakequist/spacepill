@@ -23,7 +23,7 @@ func emitJSON(_ object: Any) throws {
 // MARK: - Where this binary lives
 
 enum Install {
-    /// This binary's real path. Homebrew puts a symlink on PATH, so resolve it.
+    /// This binary's real path. `install-cli` puts a symlink on PATH, so resolve it.
     static var executableURL: URL? {
         guard let path = Bundle.main.executablePath else { return nil }
         return URL(fileURLWithPath: path).resolvingSymlinksInPath()
@@ -78,8 +78,8 @@ struct CommandResult {
 
 /**
  * Runs a tool and captures its output. Returns a non-zero status rather than
- * throwing when the tool is missing, so callers can treat "no brew" and "brew
- * said no" the same way.
+ * throwing when the tool is missing, so callers can treat "tool absent" and
+ * "tool said no" the same way.
  */
 @discardableResult
 func runTool(_ executable: String, _ arguments: [String]) -> CommandResult {
@@ -109,11 +109,6 @@ func runTool(_ executable: String, _ arguments: [String]) -> CommandResult {
         standardOutput: String(data: outData, encoding: .utf8) ?? "",
         standardError: String(data: errData, encoding: .utf8) ?? ""
     )
-}
-
-/// First existing path from the list, or nil.
-func firstExisting(_ paths: [String]) -> String? {
-    paths.first { FileManager.default.isExecutableFile(atPath: $0) }
 }
 
 // MARK: - Semantic versions

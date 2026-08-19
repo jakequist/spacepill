@@ -45,8 +45,8 @@ pkill -x "$APP_NAME" 2>/dev/null || true
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_BUNDLE/Contents/MacOS" "$APP_BUNDLE/Contents/Resources" "$APP_BUNDLE/Contents/Helpers"
 cp "$BUILT_BINARY" "$APP_BUNDLE/Contents/MacOS/"
-# The `spacepill` CLI ships inside the bundle so Homebrew can symlink it onto
-# PATH and `spacepill install-cli` has something to point at.
+# The `spacepill` CLI ships inside the bundle so `spacepill install-cli` has
+# something to point at when it symlinks the CLI onto PATH.
 #
 # It goes in Contents/Helpers, not Contents/MacOS, because macOS filesystems are
 # case-insensitive by default: `MacOS/spacepill` and `MacOS/SpacePill` are the

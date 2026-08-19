@@ -30,9 +30,8 @@ swift build -c release
 
 # 3. Create .app structure
 cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
-# `spacepill`, the command-line client, rides along inside the bundle. The Cask
-# exposes it with a `binary` stanza; direct-download users run
-# `spacepill install-cli` to symlink it into /usr/local/bin.
+# `spacepill`, the command-line client, rides along inside the bundle. Users
+# run `spacepill install-cli` to symlink it into /usr/local/bin.
 #
 # Contents/Helpers rather than Contents/MacOS: macOS filesystems are
 # case-insensitive by default, so `MacOS/spacepill` and `MacOS/SpacePill` are one

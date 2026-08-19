@@ -1,7 +1,7 @@
 name: Release
 
 # Cuts a SpacePill release: bump version, tag, build, (optionally) sign +
-# notarize, publish a GitHub Release with the DMG, and update the Homebrew cask.
+# notarize, and publish a GitHub Release with the DMG.
 #
 # TWO WAYS TO TRIGGER
 #   1. One click: Actions -> Release -> Run workflow, pick a bump (patch/minor/
@@ -35,7 +35,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write   # create releases, push the version + cask commits and tag
+  contents: write   # create releases, push the version commit and tag
 
 jobs:
   release:
@@ -160,13 +160,6 @@ jobs:
           echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
           echo "$SHA  SpacePill.dmg"
 
-      - name: Regenerate Homebrew cask
-        run: |
-          set -euo pipefail
-          sed -e "s/VERSION_PLACEHOLDER/${{ steps.ver.outputs.version }}/g" \
-              -e "s/SHA256_PLACEHOLDER/${{ steps.sum.outputs.sha256 }}/g" \
-              CaskTemplate.rb > Casks/spacepill.rb
-
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -183,13 +176,3 @@ jobs:
             --title "v$V" \
             --notes "$NOTE"$'\n\n'"SHA-256: \`${{ steps.sum.outputs.sha256 }}\`" \
             --verify-tag
-
-      - name: Commit updated cask
-        run: |
-          set -euo pipefail
-          if git diff --quiet Casks/spacepill.rb; then
-            echo "Cask unchanged."; exit 0
-          fi
-          git add Casks/spacepill.rb
-          git commit -m "Update cask for v${{ steps.ver.outputs.version }}"
-          git push origin HEAD:main

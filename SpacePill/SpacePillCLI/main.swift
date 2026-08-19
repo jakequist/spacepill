@@ -437,7 +437,7 @@ func commandHelp() {
       notes --edit [--space N]         Edit notes in $EDITOR
       notes --path [--space N]         Print where the notes file lives
       doctor                           Check permissions and shortcuts
-      update [--check]                 Update SpacePill (Homebrew, or a verified download)
+      update [--check]                 Update SpacePill from the latest verified release
       version                          Print the version
       install-cli                      Symlink this binary into /usr/local/bin
       help                             This message

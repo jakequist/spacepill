@@ -8,8 +8,8 @@ setup that turns unsigned previews into signed, notarized builds.
 
 **Actions tab → Release → Run workflow → pick `minor` → Run.**
 
-That bumps `VERSION`, tags it, builds, publishes a GitHub Release with the DMG,
-and updates the Homebrew cask. Done.
+That bumps `VERSION`, tags it, builds, and publishes a GitHub Release with the
+DMG. Done.
 
 Prefer the command line? Just push a tag:
 
@@ -25,7 +25,7 @@ The tag push triggers the same build-and-publish path.
 | File | Trigger | What it does |
 | :-- | :-- | :-- |
 | `ci.yml` | every push to `main` / PR | `swift build` + `./bin/test.sh`. Skips doc-only changes. |
-| `release.yml` | manual dispatch, or a `v*` tag | version → tag → build → sign (if configured) → DMG → Release → cask |
+| `release.yml` | manual dispatch, or a `v*` tag | version → tag → build → sign (if configured) → DMG → Release |
 | `pages.yml` | push to `main` under `docs/**` or `.assets/**` | deploys the site to GitHub Pages |
 
 Releases and site deploys are **decoupled** on purpose — a typo fix on the site
@@ -87,7 +87,7 @@ the runner is torn down; the private key never persists.
    file. (`jakequist.com` is a separate Vercel site, unrelated to GitHub Pages.)
    If you ever want SpacePill under a custom domain, that's a Pages custom-domain
    setup, distinct from Vercel.
-3. **Branch protection:** the release job pushes the version bump and cask commit
+3. **Branch protection:** the release job pushes the version bump commit
    straight to `main`. If you protect `main`, allow `github-actions[bot]` to
    bypass, or the release will fail at the push step.
 
