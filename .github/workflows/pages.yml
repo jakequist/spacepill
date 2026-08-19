@@ -1,18 +1,20 @@
 name: Deploy site
 
-# Publishes /docs to GitHub Pages (https://jakequist.com/spacepill/) whenever the
-# site or its source screenshots change. Decoupled from releases on purpose: docs
-# fixes ship the moment they land on main, without cutting a version.
+# Publishes /website to GitHub Pages (https://spacepill.dev) whenever the site
+# changes. Decoupled from releases on purpose: site fixes ship the moment they
+# land on main, without cutting a version.
 #
 # ONE-TIME SETUP: repo Settings -> Pages -> Build and deployment -> Source ->
-# "GitHub Actions". (Not "Deploy from a branch".)
+# "GitHub Actions". (Not "Deploy from a branch".) The custom domain is also set
+# in Pages settings; DNS for spacepill.dev lives in Cloudflare (DNS-only records
+# pointing at GitHub Pages, so GitHub can issue the TLS certificate).
 
 on:
   push:
     branches: [main]
     paths:
-      - 'docs/**'
-      - '.assets/**'
+      - 'website/**'
+      - 'install.sh'
   workflow_dispatch:
 
 # Allow one concurrent deploy; let an in-progress run finish rather than cancel,
@@ -35,26 +37,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Keep docs/assets in step with the canonical screenshots in .assets.
-      # Idempotent: normally a no-op because they're committed already.
-      - name: Sync screenshots into the site
-        run: ./bin/sync-docs-assets.sh
-
-      # Serve the installer at https://jakequist.github.io/spacepill/install.sh
-      # from the single canonical copy at the repo root.
+      # Serve the installer at https://spacepill.dev/install.sh from the single
+      # canonical copy at the repo root.
       - name: Stage installer for the site
-        run: cp install.sh docs/install.sh
-
-      - name: Guard against absolute links
-        run: |
-          set -euo pipefail
-          # jakequist.com/spacepill/ is a project sub-path, so root-absolute
-          # asset/link references (href="/..." src="/...") 404 in production.
-          if grep -rnE '(href|src)="/[^/]' docs/*.html; then
-            echo "::error::Found root-absolute links in docs/ -- use relative paths."
-            exit 1
-          fi
-          echo "No root-absolute links."
+        run: cp install.sh website/install.sh
 
       # Requires a one-time manual enable: Settings -> Pages -> Source ->
       # "GitHub Actions". The workflow token cannot create the Pages site itself
@@ -65,7 +51,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: website
 
       - id: deployment
         uses: actions/deploy-pages@v4

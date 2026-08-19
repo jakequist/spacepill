@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SpacePill — always know which macOS Space you're on</title>
+    <meta name="description" content="A native macOS menu bar app that shows your current Space as a colour-coded, named pill — with a fuzzy keyboard switcher, per-Space notes, and a real CLI. Free, open source, no network access.">
+    <link rel="canonical" href="https://spacepill.dev/">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="style.css">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SpacePill">
+    <meta property="og:title" content="SpacePill — always know which macOS Space you're on">
+    <meta property="og:description" content="A colour-coded, named pill in your menu bar for the current macOS Space. Fuzzy-jump to any Space by name, keep notes per Space, script it from the CLI. Native, open source, zero network access.">
+    <meta property="og:url" content="https://spacepill.dev/">
+    <meta property="og:image" content="https://spacepill.dev/assets/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SpacePill — always know which macOS Space you're on">
+    <meta name="twitter:description" content="A colour-coded, named pill in your menu bar for the current macOS Space. Fuzzy-jump by name, per-Space notes, a real CLI. Native, open source, zero network access.">
+    <meta name="twitter:image" content="https://spacepill.dev/assets/og.png">
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+        <div class="container">
+            <a class="brand" href="./" aria-label="SpacePill home">
+                <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+                    <rect x="2" y="14" width="60" height="36" rx="18" fill="#3d7bfd" stroke="#000" stroke-opacity="0.55" stroke-width="4"/>
+                    <circle cx="21" cy="32" r="11" fill="#12305e" stroke="#000" stroke-opacity="0.6" stroke-width="2"/>
+                    <rect x="38" y="27" width="17" height="4" rx="2" fill="#fff" fill-opacity="0.9"/>
+                    <rect x="38" y="35" width="11" height="4" rx="2" fill="#fff" fill-opacity="0.6"/>
+                </svg>
+                SpacePill
+            </a>
+            <nav class="site-nav" aria-label="Main">
+                <a class="nav-hide-sm" href="#features">Features</a>
+                <a class="nav-hide-sm" href="#cli">CLI</a>
+                <a href="#install">Install</a>
+                <a class="nav-github" href="https://github.com/jakequist/spacepill">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+                    </svg>
+                    GitHub
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main">
+
+        <!-- ============================== Hero ============================== -->
+        <section class="hero">
+            <div class="container">
+                <p class="eyebrow">Free &amp; open source · macOS 13+</p>
+                <h1>Always know which <span class="accent-word">Space</span> you're&nbsp;on.</h1>
+                <p class="lede">
+                    SpacePill turns your current macOS Space into a colour-coded,
+                    named pill in the menu bar — and gives every desktop a name,
+                    a colour, a notes pad, and a hotkey that jumps straight to it.
+                </p>
+
+                <div class="menubar-demo" aria-label="A recreation of the macOS menu bar showing the SpacePill indicator cycling through named Spaces">
+                    <span class="pill" id="hero-pill" style="--pill-color: #43b45a;">
+                        <span class="num">4</span>
+                        <span class="label">Docs</span>
+                    </span>
+                    <span class="status" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12.6a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6Zm0-4.1c-1.3 0-2.5.5-3.4 1.4l1.4 1.4A2.8 2.8 0 0 1 8 10.5c.76 0 1.47.3 2 .8l1.4-1.4A4.8 4.8 0 0 0 8 8.5Zm0-4.1C5.6 4.4 3.4 5.4 1.8 7l1.4 1.4A6.8 6.8 0 0 1 8 6.5c1.87 0 3.57.75 4.8 1.97L14.2 7A8.8 8.8 0 0 0 8 4.4Z"/></svg>
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M11.7 10.3a5 5 0 1 0-1.4 1.4l2.9 3 1.4-1.5-2.9-2.9ZM7 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
+                        <span class="clock">Thu 7:50 PM</span>
+                    </span>
+                </div>
+                <p class="hero-hint">Green is Docs. Red is Code. Your brain learns the layout — no reading required.</p>
+
+                <div class="install" id="install">
+                    <div class="install-cmd">
+                        <code id="install-code"><span class="prompt">$ </span>curl -fsSL https://spacepill.dev/install.sh | sh</code>
+                        <button class="copy-btn" type="button" id="copy-install" aria-label="Copy install command">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                <path d="M4 2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2Zm2 0v8h6V2H6ZM2 4h1v9a1 1 0 0 0 1 1h7v1a1 1 0 0 1-1 1H4a3 3 0 0 1-3-3V5a1 1 0 0 1 1-1Z"/>
+                            </svg>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                    <p class="install-alt">
+                        Or download the DMG from the
+                        <a href="https://github.com/jakequist/spacepill/releases/latest">latest release</a>
+                        and drag it to Applications.
+                    </p>
+                    <div class="install-badges" role="list">
+                        <span role="listitem"><span class="dot" aria-hidden="true"></span>Signed &amp; notarized</span>
+                        <span role="listitem"><span class="dot" aria-hidden="true"></span>No network access</span>
+                        <span role="listitem"><span class="dot" aria-hidden="true"></span>Zero dependencies</span>
+                        <span role="listitem"><span class="dot" aria-hidden="true"></span>MIT licensed</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================== Demo ============================== -->
+        <section class="section" id="demo">
+            <div class="container">
+                <div class="section-head">
+                    <p class="kicker">Fourteen seconds of it</p>
+                    <h2>Type a name. Land on the Space.</h2>
+                    <p>
+                        Six desktops that all look identical become Inbox, Email,
+                        Code, Docs, Review — each with its own colour. Fuzzy-type
+                        three letters and you're there.
+                    </p>
+                </div>
+                <div class="demo-frame">
+                    <video src="assets/demo.mp4" width="1200" height="754"
+                           autoplay muted loop playsinline
+                           aria-label="Screen recording: opening the Quick Switch bar, fuzzy-typing a Space name, and jumping between colour-coded Spaces while the menu bar pill follows along"></video>
+                </div>
+                <p class="demo-caption">The pill updates the moment the switch animation starts — not after it finishes.</p>
+            </div>
+        </section>
+
+        <!-- ============================== Features ============================== -->
+        <section class="section" id="features">
+            <div class="container">
+                <div class="section-head">
+                    <p class="kicker">What it does</p>
+                    <h2>One pill, three hotkeys, zero swiping.</h2>
+                    <p>
+                        Built for people who run a lot of Spaces — say, one coding
+                        agent per desktop — and got tired of losing track of which
+                        one was which.
+                    </p>
+                </div>
+
+                <article class="feature">
+                    <div class="feature-copy">
+                        <h3>A pill that never lies</h3>
+                        <p>
+                            Your current Space sits in the menu bar as a bold pill
+                            with its number, its name, and its colour. It updates
+                            optimistically — the instant you start switching, not
+                            half a second later when macOS finishes the animation.
+                        </p>
+                        <p>
+                            Give each Space a colour and the glance becomes
+                            subconscious: green is Docs, red is Code. Labels stick
+                            to the Space itself, so they survive reordering in
+                            Mission Control.
+                        </p>
+                    </div>
+                    <div class="shot shot-pad">
+                        <img src="assets/pill-variants.png" width="340" height="208"
+                             alt="Four SpacePill pills stacked: a crimson Inbox, a blue Email, a red Code, and a green Docs, each with its Space number in a dark circle">
+                    </div>
+                </article>
+
+                <article class="feature flip">
+                    <div class="feature-copy">
+                        <p class="hotkey" aria-label="Default hotkey: Command Shift J"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>J</kbd></p>
+                        <h3>Jump by name, not by number</h3>
+                        <p>
+                            Quick Switch drops down from the pill and fuzzy-matches
+                            as you type: <code>dcs</code> finds <strong>Docs</strong>,
+                            <code>rev</code> finds <strong>Review</strong>. Hit
+                            return and you're there — no swiping through eight
+                            desktops to reach the ninth.
+                        </p>
+                        <p>
+                            Spaces macOS can't reach (no shortcut bound yet) are
+                            shown greyed out rather than silently failing.
+                        </p>
+                    </div>
+                    <div class="shot">
+                        <img src="assets/quick-switch.png" width="904" height="830"
+                             alt="The Quick Switch panel open beneath the green Docs pill, listing Inbox, Email, Code, Docs, Review and a greyed-out Chat, with a 'Switch to space…' search field">
+                    </div>
+                </article>
+
+                <article class="feature">
+                    <div class="feature-copy">
+                        <p class="hotkey" aria-label="Default hotkey: Command Shift S"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>S</kbd></p>
+                        <h3>Name a Space in two keystrokes</h3>
+                        <p>
+                            Quick Edit opens right under the pill: type a label,
+                            pick one of eight colours, save. That's the whole
+                            ceremony. New project, new desktop, named and coloured
+                            before your coffee moves.
+                        </p>
+                    </div>
+                    <div class="shot">
+                        <img src="assets/quick-edit.png" width="904" height="464"
+                             alt="The Quick Edit popover under the pill: a text field reading 'Docs', a row of eight colour swatches with green selected, and Clear and Save buttons">
+                    </div>
+                </article>
+
+                <article class="feature flip">
+                    <div class="feature-copy">
+                        <p class="hotkey" aria-label="Default hotkey: Command Shift N"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>N</kbd></p>
+                        <h3>Notes that live on the desktop</h3>
+                        <p>
+                            Every Space gets its own floating Markdown scratchpad
+                            that follows you as you switch — a deploy checklist on
+                            the release desktop, a prompt scratch buffer next to
+                            each agent. Plain <code>.md</code> files on disk,
+                            yours to grep.
+                        </p>
+                    </div>
+                    <div class="shot">
+                        <img src="assets/notes.png" width="1144" height="464"
+                             alt="The floating Space Notes panel below the menu bar, showing a Markdown deploy checklist with checked and unchecked items">
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- ============================== CLI ============================== -->
+        <section class="section" id="cli">
+            <div class="container">
+                <div class="cli-grid">
+                    <div class="cli-copy">
+                        <div class="section-head" style="margin-bottom: 0;">
+                            <p class="kicker">For your scripts</p>
+                            <h2>A real CLI, not an afterthought.</h2>
+                        </div>
+                        <p>
+                            SpacePill ships a <code>spacepill</code> command that
+                            talks to the app over a local socket — so your shell,
+                            your scripts, and your agents can read and drive your
+                            Spaces too.
+                        </p>
+                        <ul class="cli-commands">
+                            <li><code>list</code><span>every Space, with labels and colours</span></li>
+                            <li><code>jump</code><span>switch to a Space by name or number</span></li>
+                            <li><code>label</code><span>rename or recolour from the shell</span></li>
+                            <li><code>notes</code><span>read or write the current Space's notes</span></li>
+                            <li><code>doctor</code><span>check permissions and shortcuts</span></li>
+                            <li><code>update</code><span>upgrade to the latest signed release</span></li>
+                        </ul>
+                    </div>
+                    <div class="terminal" role="img" aria-label="A terminal session: 'spacepill list' prints five colour-coded Spaces with Code marked current, 'spacepill jump docs' switches to Space 4, and 'spacepill doctor' reports accessibility granted, desktop shortcuts enabled, and the app reachable">
+                        <div class="terminal-bar" aria-hidden="true">
+                            <span class="light"></span><span class="light"></span><span class="light"></span>
+                            <span class="title">zsh — spacepill</span>
+                        </div>
+                        <pre aria-hidden="true"><span class="t-prompt">$</span> <span class="t-cmd">spacepill list</span>
+  1  <span class="t-dot-crimson">●</span> Inbox
+  2  <span class="t-dot-blue">●</span> Email
+  3  <span class="t-dot-red">●</span> Code      <span class="t-dim">← current</span>
+  4  <span class="t-dot-green">●</span> Docs
+  5  <span class="t-dot-purple">●</span> Review
+
+<span class="t-prompt">$</span> <span class="t-cmd">spacepill jump docs</span>
+Switched to Space 4 <span class="t-dim">·</span> Docs
+
+<span class="t-prompt">$</span> <span class="t-cmd">spacepill doctor</span>
+<span class="t-ok">✓</span> Accessibility granted
+<span class="t-ok">✓</span> Desktop shortcuts enabled <span class="t-dim">(Spaces 1–5)</span>
+<span class="t-ok">✓</span> SpacePill is running and reachable</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================== Values ============================== -->
+        <section class="section" id="values">
+            <div class="container">
+                <div class="section-head">
+                    <p class="kicker">Small on purpose</p>
+                    <h2>The whole app fits in your head.</h2>
+                    <p>
+                        One native Swift binary that does one job well. Nothing
+                        phones home, nothing runs in the background that you
+                        didn't ask for.
+                    </p>
+                </div>
+                <div class="values-grid">
+                    <div class="value-card">
+                        <h3><span class="swatch" style="background: var(--pill-blue);" aria-hidden="true"></span>Native Swift</h3>
+                        <p>A single SwiftUI + AppKit app. No Electron, no runtime, no third-party dependencies at all.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3><span class="swatch" style="background: var(--pill-green);" aria-hidden="true"></span>No network access</h3>
+                        <p>The app contains no networking code. Your labels, colours, and notes are plain files in <code>~/.spacepill/</code> — and nowhere else.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3><span class="swatch" style="background: var(--pill-purple);" aria-hidden="true"></span>Open source, MIT</h3>
+                        <p>Every line is on <a href="https://github.com/jakequist/spacepill">GitHub</a>. Read it, fork it, build it yourself.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3><span class="swatch" style="background: var(--pill-orange);" aria-hidden="true"></span>Signed &amp; notarized</h3>
+                        <p>Releases are Developer ID signed and notarized by Apple — they open with no warnings. macOS 13 or later.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3><span class="swatch" style="background: var(--pill-crimson);" aria-hidden="true"></span>No background services</h3>
+                        <p>Just a menu bar app. No daemons, no launch agents, no helpers you have to hunt down later.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3><span class="swatch" style="background: var(--pill-red);" aria-hidden="true"></span>Native Spaces</h3>
+                        <p>Works with the Spaces you already have. No tiling takeover, no SIP flags, no rewiring your window manager.</p>
+                    </div>
+                </div>
+
+                <aside class="caveat">
+                    <strong>One honest caveat:</strong> jumping to a Space replays
+                    macOS's own "Switch to Desktop" keyboard shortcuts, which Apple
+                    ships turned <em>off</em>. SpacePill's setup screen — and
+                    <code>spacepill doctor</code> — walk you through flipping them
+                    on in System Settings. It takes about thirty seconds, once.
+                </aside>
+            </div>
+        </section>
+
+        <!-- ============================== CTA ============================== -->
+        <section class="section cta">
+            <div class="container">
+                <h2>Stop counting desktops.</h2>
+                <p class="lede">
+                    Install SpacePill, name your Spaces, and never wonder where
+                    you are again.
+                </p>
+                <div class="install">
+                    <div class="install-cmd">
+                        <code><span class="prompt">$ </span>curl -fsSL https://spacepill.dev/install.sh | sh</code>
+                        <button class="copy-btn" type="button" id="copy-install-2" aria-label="Copy install command">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                <path d="M4 2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2Zm2 0v8h6V2H6ZM2 4h1v9a1 1 0 0 0 1 1h7v1a1 1 0 0 1-1 1H4a3 3 0 0 1-3-3V5a1 1 0 0 1 1-1Z"/>
+                            </svg>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                    <p class="install-alt">
+                        Prefer a download? <a href="https://github.com/jakequist/spacepill/releases/latest">Grab the DMG</a> — signed and notarized.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <span>SpacePill · made for macOS 13+</span>
+            <nav aria-label="Footer">
+                <a href="https://github.com/jakequist/spacepill">GitHub</a>
+                <a href="https://github.com/jakequist/spacepill/releases">Releases</a>
+                <a href="https://github.com/jakequist/spacepill/blob/main/LICENSE">MIT License</a>
+            </nav>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            "use strict";
+
+            /* --- Copy buttons --- */
+            var CMD = "curl -fsSL https://spacepill.dev/install.sh | sh";
+            ["copy-install", "copy-install-2"].forEach(function (id) {
+                var btn = document.getElementById(id);
+                if (!btn) return;
+                var label = btn.querySelector("span");
+                btn.addEventListener("click", function () {
+                    function done(ok) {
+                        label.textContent = ok ? "Copied" : "Press ⌘C";
+                        btn.classList.toggle("copied", ok);
+                        setTimeout(function () {
+                            label.textContent = "Copy";
+                            btn.classList.remove("copied");
+                        }, 1800);
+                    }
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(CMD).then(
+                            function () { done(true); },
+                            function () { done(false); }
+                        );
+                    } else {
+                        done(false);
+                    }
+                });
+            });
+
+            var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+            /* --- Hero pill: cycle through named Spaces --- */
+            var pill = document.getElementById("hero-pill");
+            if (pill && !reduceMotion.matches) {
+                var spaces = [
+                    { n: 4, label: "Docs",   color: "#43b45a" },
+                    { n: 5, label: "Review", color: "#a35ce0" },
+                    { n: 1, label: "Inbox",  color: "#e0435c" },
+                    { n: 3, label: "Code",   color: "#e8503e" },
+                    { n: 2, label: "Email",  color: "#3d7bfd" }
+                ];
+                var i = 0;
+                var num = pill.querySelector(".num");
+                var lab = pill.querySelector(".label");
+                setInterval(function () {
+                    i = (i + 1) % spaces.length;
+                    var s = spaces[i];
+                    pill.style.setProperty("--pill-color", s.color);
+                    num.textContent = s.n;
+                    lab.textContent = s.label;
+                }, 2200);
+            }
+
+            /* --- Demo video: no autoplay for reduced-motion users --- */
+            var video = document.querySelector(".demo-frame video");
+            if (video && reduceMotion.matches) {
+                video.removeAttribute("autoplay");
+                video.setAttribute("controls", "");
+                video.pause();
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -26,7 +26,7 @@ The tag push triggers the same build-and-publish path.
 | :-- | :-- | :-- |
 | `ci.yml` | every push to `main` / PR | `swift build` + `./bin/test.sh`. Skips doc-only changes. |
 | `release.yml` | manual dispatch, or a `v*` tag | version → tag → build → sign (if configured) → DMG → Release |
-| `pages.yml` | push to `main` under `docs/**` or `.assets/**` | deploys the site to GitHub Pages |
+| `pages.yml` | push to `main` under `website/**` or `install.sh` | deploys the site to GitHub Pages |
 
 Releases and site deploys are **decoupled** on purpose — a typo fix on the site
 ships immediately without cutting a version, and a release doesn't wait on docs.
@@ -81,12 +81,12 @@ the runner is torn down; the private key never persists.
    The workflow can't create the Pages site itself on this repo (the token isn't
    allowed to), so until you flip this, `pages.yml` fails with *"verify that the
    repository has Pages enabled"*. After enabling, re-run the workflow or push
-   any `docs/` change.
-2. **URL:** the site publishes at the default
-   **`https://jakequist.github.io/spacepill/`** — no custom domain and no `CNAME`
-   file. (`jakequist.com` is a separate Vercel site, unrelated to GitHub Pages.)
-   If you ever want SpacePill under a custom domain, that's a Pages custom-domain
-   setup, distinct from Vercel.
+   any `website/` change.
+2. **URL:** the site publishes at **`https://spacepill.dev`** (custom domain,
+   set in Settings → Pages). DNS lives in Cloudflare: apex A/AAAA records to
+   GitHub Pages plus a `www` CNAME to `jakequist.github.io`, all DNS-only
+   (grey cloud) so GitHub can issue the TLS certificate. The old
+   `https://jakequist.github.io/spacepill/` URLs redirect there automatically.
 3. **Branch protection:** the release job pushes the version bump commit
    straight to `main`. If you protect `main`, allow `github-actions[bot]` to
    bypass, or the release will fail at the push step.

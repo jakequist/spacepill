@@ -2,7 +2,7 @@
 #
 # SpacePill installer.
 #
-#   curl -fsSL https://jakequist.github.io/spacepill/install.sh | sh
+#   curl -fsSL https://spacepill.dev/install.sh | sh
 #
 # Downloads the latest signed release, installs it to /Applications, launches
 # it, and offers to put the `spacepill` CLI on your PATH. No dependencies beyond

@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="#-install">Install</a> ·
-  <a href="https://jakequist.github.io/spacepill/">Documentation</a> ·
+  <a href="https://spacepill.dev/">Documentation</a> ·
   <a href="https://github.com/jakequist/spacepill/releases/latest">Download</a>
 </p>
 
@@ -84,7 +84,7 @@ whatever you're working on.
 installs it to `/Applications`, and launches it:
 
 ```sh
-curl -fsSL https://jakequist.github.io/spacepill/install.sh | sh
+curl -fsSL https://spacepill.dev/install.sh | sh
 ```
 
 **Direct download** — grab `SpacePill.dmg` from the
@@ -130,7 +130,7 @@ code at all. Your labels, colours, and notes are plain files under
 
 ## 📚 More
 
-- **[Documentation](https://jakequist.github.io/spacepill/)** — full guide, CLI reference, and troubleshooting
+- **[Documentation](https://spacepill.dev/)** — full guide, CLI reference, and troubleshooting
 - **[Contributing](CONTRIBUTING.md)** — build from source and hack on it
 - Built with ❤️ by [Jake Quist](https://github.com/jakequist) · [MIT licensed](LICENSE)
 
