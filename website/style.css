@@ -940,3 +940,425 @@ section {
     background: var(--surface-2);
     text-decoration: none;
 }
+
+/* ==========================================================================
+   Docs (/docs/) — layout and components for the documentation page only.
+   Everything below is scoped under .docs / .docs-* and does not restyle the
+   marketing page.
+   ========================================================================== */
+
+/* ---------- Docs layout: sticky TOC + readable body ---------- */
+
+.docs-layout {
+    display: grid;
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: clamp(2rem, 4vw, 3.5rem);
+    padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(3.5rem, 8vw, 6rem);
+    align-items: start;
+}
+
+.docs-sidebar {
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.docs-toc-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    margin-bottom: 0.75rem;
+}
+
+.docs-toc ol {
+    list-style: none;
+    display: grid;
+    gap: 0.1rem;
+    border-left: 1px solid var(--border);
+}
+
+.docs-toc a {
+    display: block;
+    padding: 0.28rem 0 0.28rem 0.9rem;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+}
+
+.docs-toc a code {
+    font-size: 0.92em;
+}
+
+.docs-toc a:hover {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.docs-toc a.is-active {
+    color: var(--accent-strong);
+    border-left-color: var(--accent);
+    font-weight: 600;
+}
+
+/* Mobile TOC: hidden on desktop, a <details> at the top of the body below */
+.docs-toc-mobile {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .docs-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .docs-sidebar {
+        display: none;
+    }
+
+    .docs-toc-mobile {
+        display: block;
+        margin-top: 2rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.9rem 1.2rem;
+    }
+
+    .docs-toc-mobile summary {
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    .docs-toc-mobile ol {
+        margin: 0.8rem 0 0.2rem;
+        padding-left: 1.4rem;
+        display: grid;
+        gap: 0.35rem;
+        font-size: 0.92rem;
+    }
+
+    .docs-toc-mobile a {
+        color: var(--text-muted);
+    }
+
+    .docs-toc-mobile a:hover {
+        color: var(--text);
+    }
+}
+
+/* ---------- Docs typography ---------- */
+
+.docs-body {
+    max-width: 46rem;
+    min-width: 0;
+}
+
+.docs-head .kicker {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+}
+
+.docs-head h1 {
+    margin-top: 0.6rem;
+    font-size: clamp(1.9rem, 4.5vw, 2.7rem);
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    text-wrap: balance;
+}
+
+.docs-lede {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+
+.docs-body section {
+    margin-top: clamp(3rem, 7vw, 4.5rem);
+    padding-top: clamp(2rem, 4vw, 2.75rem);
+    border-top: 1px solid var(--border);
+    scroll-margin-top: 5.5rem;
+}
+
+.docs-body h2 {
+    font-size: clamp(1.45rem, 3vw, 1.85rem);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-weight: 750;
+    text-wrap: balance;
+}
+
+.docs-body h2 code {
+    font-size: 0.9em;
+}
+
+.docs-body h3 {
+    margin-top: 2.25rem;
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.docs-body .h3-aside {
+    font-weight: 400;
+    color: var(--text-faint);
+    font-size: 0.9em;
+}
+
+/* Anchor "#" on section headings — visible on hover/focus */
+.h-anchor {
+    margin-left: 0.45em;
+    font-weight: 500;
+    font-size: 0.85em;
+    color: var(--text-faint);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.docs-body h2:hover .h-anchor,
+.h-anchor:focus-visible {
+    opacity: 1;
+}
+
+.h-anchor:hover {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.docs-body p {
+    margin-top: 1rem;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+
+.docs-body ul,
+.docs-body ol:not(.docs-toc-mobile ol) {
+    margin-top: 1rem;
+    padding-left: 1.4rem;
+    display: grid;
+    gap: 0.5rem;
+    color: var(--text-muted);
+}
+
+.docs-body li::marker {
+    color: var(--text-faint);
+}
+
+.docs-body strong {
+    color: var(--text);
+}
+
+.docs-body .path {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.docs-body .fine {
+    font-size: 0.9rem;
+    color: var(--text-faint);
+}
+
+/* ---------- Docs tables ---------- */
+
+.table-scroll {
+    margin-top: 1.4rem;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.doc-table {
+    width: 100%;
+    min-width: 34rem;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.doc-table-compact {
+    min-width: 0;
+}
+
+.doc-table caption {
+    caption-side: top;
+    text-align: left;
+    padding: 0.85rem 1.1rem 0;
+    font-size: 0.85rem;
+    color: var(--text-faint);
+}
+
+.doc-table th,
+.doc-table td {
+    padding: 0.7rem 1.1rem;
+    text-align: left;
+    vertical-align: top;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+}
+
+.doc-table thead th {
+    border-top: none;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-faint);
+    padding-block: 0.8rem;
+}
+
+.doc-table caption + thead th,
+.doc-table tbody:first-child tr:first-child th,
+.doc-table tbody:first-child tr:first-child td {
+    border-top: none;
+}
+
+.doc-table tbody th[scope="row"] {
+    color: var(--text);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.doc-table-cli tbody th[scope="row"] {
+    white-space: normal;
+    font-weight: 400;
+}
+
+.doc-table code {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.08em 0.35em;
+    white-space: nowrap;
+}
+
+/* ---------- Docs code blocks (terminal-styled) ---------- */
+
+.docs-code {
+    margin-top: 1.4rem;
+}
+
+.docs-code .code-label {
+    padding: 0.55rem 1.25rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    font-family: var(--font);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #7d88a3;
+}
+
+.docs-code pre {
+    white-space: pre;
+}
+
+.docs-code .t-key { color: #8ab6ff; }
+.docs-code .t-str { color: #7ee2a8; }
+
+/* ---------- Docs figures ---------- */
+
+.docs-fig {
+    margin-top: 1.6rem;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-card);
+    background: var(--surface);
+}
+
+.docs-fig img {
+    width: 100%;
+}
+
+.docs-fig figcaption {
+    padding: 0.75rem 1.2rem;
+    font-size: 0.85rem;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border);
+}
+
+.docs-fig-narrow img {
+    width: min(100%, 30rem);
+    margin-inline: auto;
+}
+
+.docs-fig-narrow {
+    background: var(--surface);
+}
+
+.docs-fig-pill {
+    background:
+        radial-gradient(120% 130% at 20% 0%, color-mix(in srgb, var(--pill-blue) 14%, transparent), transparent 60%),
+        var(--surface);
+}
+
+.docs-fig-pill img {
+    width: min(100%, 240px);
+    margin: clamp(1.25rem, 3vw, 2rem) auto;
+}
+
+/* ---------- Docs callouts ---------- */
+
+.docs-body .caveat {
+    margin-top: 1.6rem;
+}
+
+.docs-body .caveat .docs-code {
+    margin-top: 1rem;
+}
+
+.docs-note {
+    margin-top: 1.6rem;
+    border: 1px solid color-mix(in srgb, var(--pill-blue) 40%, var(--border));
+    background: color-mix(in srgb, var(--pill-blue) 7%, var(--surface));
+    border-radius: var(--radius);
+    padding: 1.4rem 1.6rem;
+    font-size: 0.97rem;
+    color: var(--text-muted);
+}
+
+.docs-note strong {
+    color: var(--text);
+}
+
+/* ---------- Docs field list (settings reference) ---------- */
+
+.docs-fields {
+    margin-top: 1.2rem;
+    display: grid;
+    gap: 0.35rem;
+}
+
+.docs-fields dt {
+    margin-top: 0.9rem;
+    font-family: var(--mono);
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.docs-fields dt .field-meta {
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: 0.82rem;
+    color: var(--text-faint);
+    margin-left: 0.4em;
+}
+
+.docs-fields dd {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--border);
+}

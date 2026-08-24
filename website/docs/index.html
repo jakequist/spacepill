@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Docs — SpacePill</title>
+    <meta name="description" content="Everything SpacePill does and what it needs from macOS: install, permissions, the Switch to Desktop shortcuts, hotkeys, Quick Switch, Space Notes, the spacepill CLI, troubleshooting, and uninstall.">
+    <link rel="canonical" href="https://spacepill.dev/docs/">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../style.css">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SpacePill">
+    <meta property="og:title" content="Docs — SpacePill">
+    <meta property="og:description" content="Setup, permissions, hotkeys, the CLI reference, troubleshooting, and uninstall — everything SpacePill does and what it needs from macOS.">
+    <meta property="og:url" content="https://spacepill.dev/docs/">
+    <meta property="og:image" content="https://spacepill.dev/assets/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Docs — SpacePill">
+    <meta name="twitter:description" content="Setup, permissions, hotkeys, the CLI reference, troubleshooting, and uninstall.">
+    <meta name="twitter:image" content="https://spacepill.dev/assets/og.png">
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+        <div class="container">
+            <a class="brand" href="../" aria-label="SpacePill home">
+                <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+                    <rect x="2" y="14" width="60" height="36" rx="18" fill="#3d7bfd" stroke="#000" stroke-opacity="0.55" stroke-width="4"/>
+                    <circle cx="21" cy="32" r="11" fill="#12305e" stroke="#000" stroke-opacity="0.6" stroke-width="2"/>
+                    <rect x="38" y="27" width="17" height="4" rx="2" fill="#fff" fill-opacity="0.9"/>
+                    <rect x="38" y="35" width="11" height="4" rx="2" fill="#fff" fill-opacity="0.6"/>
+                </svg>
+                SpacePill
+            </a>
+            <nav class="site-nav" aria-label="Main">
+                <a class="nav-hide-sm" href="../#features">Features</a>
+                <a href="./" aria-current="page">Docs</a>
+                <a href="../#install">Install</a>
+                <a class="nav-github" href="https://github.com/jakequist/spacepill">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+                    </svg>
+                    GitHub
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main" class="docs">
+        <div class="container docs-layout">
+
+            <aside class="docs-sidebar">
+                <nav class="docs-toc" aria-label="On this page">
+                    <p class="docs-toc-title">On this page</p>
+                    <ol>
+                        <li><a href="#requirements">Requirements</a></li>
+                        <li><a href="#install">Install</a></li>
+                        <li><a href="#switching">Switching between Spaces</a></li>
+                        <li><a href="#permissions">Permissions</a></li>
+                        <li><a href="#preferences">Setup &amp; Preferences</a></li>
+                        <li><a href="#hotkeys">Hotkey reference</a></li>
+                        <li><a href="#pill">The menu bar pill</a></li>
+                        <li><a href="#quick-edit">Quick Edit</a></li>
+                        <li><a href="#quick-switch">Quick Switch</a></li>
+                        <li><a href="#notes">Space Notes</a></li>
+                        <li><a href="#cli">The <code>spacepill</code> CLI</a></li>
+                        <li><a href="#settings">The settings file</a></li>
+                        <li><a href="#troubleshooting">Troubleshooting</a></li>
+                        <li><a href="#uninstall">Uninstall</a></li>
+                    </ol>
+                </nav>
+            </aside>
+
+            <article class="docs-body">
+
+                <header class="docs-head">
+                    <p class="kicker">Documentation</p>
+                    <h1>Everything SpacePill does, and what it needs from macOS.</h1>
+                    <p class="docs-lede">
+                        SpacePill is a menu bar app for navigating macOS Spaces:
+                        a colour-coded pill for the Space you're on, plus hotkeys
+                        to relabel it, jump to another one, and take notes. One
+                        native executable, no dependencies, no network access.
+                    </p>
+                </header>
+
+                <details class="docs-toc-mobile">
+                    <summary>On this page</summary>
+                    <ol>
+                        <li><a href="#requirements">Requirements</a></li>
+                        <li><a href="#install">Install</a></li>
+                        <li><a href="#switching">Switching between Spaces</a></li>
+                        <li><a href="#permissions">Permissions</a></li>
+                        <li><a href="#preferences">Setup &amp; Preferences</a></li>
+                        <li><a href="#hotkeys">Hotkey reference</a></li>
+                        <li><a href="#pill">The menu bar pill</a></li>
+                        <li><a href="#quick-edit">Quick Edit</a></li>
+                        <li><a href="#quick-switch">Quick Switch</a></li>
+                        <li><a href="#notes">Space Notes</a></li>
+                        <li><a href="#cli">The spacepill CLI</a></li>
+                        <li><a href="#settings">The settings file</a></li>
+                        <li><a href="#troubleshooting">Troubleshooting</a></li>
+                        <li><a href="#uninstall">Uninstall</a></li>
+                    </ol>
+                </details>
+
+                <!-- ================= Requirements ================= -->
+                <section id="requirements">
+                    <h2>Requirements<a class="h-anchor" href="#requirements" aria-label="Link to Requirements">#</a></h2>
+                    <div class="table-scroll">
+                        <table class="doc-table">
+                            <tbody>
+                                <tr><th scope="row">Operating system</th><td>macOS 13 Ventura or later</td></tr>
+                                <tr><th scope="row">Architecture</th><td>Apple silicon and Intel</td></tr>
+                                <tr><th scope="row">Permissions</th><td>Accessibility (required for switching) · Input Monitoring (optional, for responsiveness)</td></tr>
+                                <tr><th scope="row">System configuration</th><td>macOS "Switch to Desktop&nbsp;N" shortcuts, which the Setup window helps you turn on — <a href="#switching">see below</a></td></tr>
+                                <tr><th scope="row">Disk footprint</th><td>The app, plus plain text files under <code>~/.spacepill/</code></td></tr>
+                                <tr><th scope="row">Network</th><td>None. The app contains no networking code.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ================= Install ================= -->
+                <section id="install">
+                    <h2>Install<a class="h-anchor" href="#install" aria-label="Link to Install">#</a></h2>
+
+                    <h3>Install script <span class="h3-aside">(recommended)</span></h3>
+                    <div class="terminal docs-code">
+                        <div class="code-label">Terminal</div>
+<pre><span class="t-prompt">$</span> <span class="t-cmd">curl -fsSL https://spacepill.dev/install.sh | sh</span></pre>
+                    </div>
+                    <p>
+                        Downloads the latest signed release, installs
+                        <code>SpacePill.app</code> into <code>/Applications</code>,
+                        launches it, and offers to put the <code>spacepill</code>
+                        CLI on your <code>PATH</code>. macOS only.
+                    </p>
+
+                    <h3>Direct download</h3>
+                    <p>
+                        Download <code>SpacePill.dmg</code> from the
+                        <a href="https://github.com/jakequist/spacepill/releases/latest">latest release</a>,
+                        open it, and drag <strong>SpacePill</strong> into
+                        Applications. Releases are Developer&nbsp;ID signed and
+                        notarised by Apple, so they open with no warnings.
+                    </p>
+
+                    <h3>Build from source</h3>
+                    <p>
+                        Clone <a href="https://github.com/jakequist/spacepill">the repository</a>
+                        and run <code>./bin/start.sh</code>, which builds, bundles,
+                        signs, and launches the app. Don't run the bare
+                        <code>swift build</code> binary — without a bundle it has
+                        no bundle identifier, so Launch&nbsp;at&nbsp;Login and the
+                        permission grants won't behave like the real app. See
+                        <a href="https://github.com/jakequist/spacepill/blob/main/CONTRIBUTING.md">CONTRIBUTING</a>
+                        for the details.
+                    </p>
+
+                    <h3>First launch</h3>
+                    <p>
+                        SpacePill has no Dock icon and no main window — it is a
+                        menu bar item only. On first launch it opens a short
+                        <strong>Setup</strong> window that walks you through the
+                        permissions and shortcuts below. If the pill shows
+                        <code>?</code>, switch Spaces once so it can read the
+                        current one. Only one instance runs at a time; a second
+                        launch detects the first and exits.
+                    </p>
+                </section>
+
+                <!-- ================= Switching ================= -->
+                <section id="switching">
+                    <h2>Switching between Spaces<a class="h-anchor" href="#switching" aria-label="Link to Switching between Spaces">#</a></h2>
+
+                    <p>
+                        macOS exposes no API for activating a Space, so the only
+                        way any app can move you to a Desktop is to press the keys
+                        you would press yourself. SpacePill replays your own
+                        <strong>Switch to Desktop&nbsp;N</strong> keyboard
+                        shortcuts. These live under
+                        <span class="path">System&nbsp;Settings → Keyboard → Keyboard&nbsp;Shortcuts → Mission&nbsp;Control</span>,
+                        one checkbox per Desktop — <strong>and Apple ships them
+                        turned off</strong>. SpacePill's Setup window checks
+                        whether they are on and, if any are off, sends you
+                        straight to the right pane.
+                    </p>
+
+                    <figure class="docs-fig">
+                        <img src="../assets/setup-shortcuts.png" width="884" height="420"
+                             alt="The Mission Control section of macOS Keyboard Shortcuts, with Move left/right a space and Switch to Desktop 1 through 5 all ticked, bound to Control plus the desktop number">
+                        <figcaption>One checkbox per Desktop: tick "Switch to Desktop&nbsp;N" for every Space you want to jump to.</figcaption>
+                    </figure>
+
+                    <p>
+                        To do it by hand: open Keyboard Shortcuts, select
+                        <strong>Mission Control</strong>, and tick
+                        <strong>Switch to Desktop&nbsp;1</strong>,
+                        <strong>Switch to Desktop&nbsp;2</strong>, and so on.
+                        SpacePill re-reads this configuration every time you open
+                        Quick Switch or Preferences, so changes take effect
+                        immediately, with no relaunch.
+                    </p>
+                    <p>
+                        The default binding is <kbd>⌃</kbd> plus the Desktop
+                        number (<kbd>⌃</kbd><kbd>1</kbd>, <kbd>⌃</kbd><kbd>2</kbd>, …),
+                        but you can bind anything you like — SpacePill reads
+                        whatever you actually configured and replays that, so
+                        rebinding is safe.
+                    </p>
+
+                    <aside class="caveat">
+                        <strong>Desktops 11 and up are unreachable.</strong>
+                        macOS defines these shortcuts only for Desktops 1–10, so
+                        Spaces past the tenth have no shortcut to replay. Quick
+                        Switch greys those rows out and says why, rather than
+                        posting a keystroke that would land you somewhere
+                        arbitrary.
+                    </aside>
+
+                    <h3>Checking what macOS thinks is enabled</h3>
+                    <p>
+                        The bindings live in the <code>com.apple.symbolichotkeys</code>
+                        preference domain. To inspect Desktop&nbsp;1 (ID&nbsp;118):
+                    </p>
+                    <div class="terminal docs-code">
+                        <div class="code-label">Terminal</div>
+<pre><span class="t-dim"># 118..127 = "Switch to Desktop 1..10"</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/usr/libexec/PlistBuddy -c "Print :AppleSymbolicHotKeys:118" \
+    ~/Library/Preferences/com.apple.symbolichotkeys.plist</span></pre>
+                    </div>
+                    <p class="fine">
+                        An <em>absent</em> entry means the factory default, which
+                        for these IDs is off. Writing this domain with
+                        <code>defaults write</code> does not take effect until the
+                        WindowServer re-reads it at login — enable the shortcuts
+                        through the System Settings UI, which registers them live.
+                    </p>
+                </section>
+
+                <!-- ================= Permissions ================= -->
+                <section id="permissions">
+                    <h2>Permissions<a class="h-anchor" href="#permissions" aria-label="Link to Permissions">#</a></h2>
+                    <p>
+                        SpacePill asks for two grants, both under
+                        <span class="path">System&nbsp;Settings → Privacy&nbsp;&amp;&nbsp;Security</span>.
+                        They do different jobs, and failing to grant them fails
+                        differently.
+                    </p>
+
+                    <div class="table-scroll">
+                        <table class="doc-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Permission</th>
+                                    <th scope="col">What it's for</th>
+                                    <th scope="col">Without it</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Accessibility</th>
+                                    <td>Posting the synthetic keystrokes that change Spaces. Switching has no API, so SpacePill sends the same key presses you would make yourself.</td>
+                                    <td><strong>Quick Switch cannot change Spaces.</strong> The bar still opens and lists your Spaces; pressing <kbd>⏎</kbd> just does nothing.</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Input Monitoring</th>
+                                    <td>A keyboard event tap that notices <kbd>⌃</kbd><kbd>←</kbd>/<kbd>⌃</kbd><kbd>→</kbd> so the pill can update at the <em>start</em> of the native transition animation instead of after it.</td>
+                                    <td>Everything still works. The pill simply lags roughly a second behind arrow-key switches instead of moving instantly.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p>
+                        Input Monitoring is the scarier-sounding of the two, and
+                        it is genuinely optional: it exists only to make the
+                        indicator feel immediate. If you'd rather not grant it,
+                        don't — SpacePill also polls and listens for the system's
+                        active-space notification, so the pill stays correct
+                        either way.
+                    </p>
+
+                    <aside class="caveat">
+                        <strong>Updating can reset your grants.</strong> macOS
+                        keys these permissions to an app's code signature, so a
+                        rebuilt or re-signed binary can look like a brand-new app
+                        and lose both — the symptom is hotkeys and pill tracking
+                        silently stopping. Toggling the checkboxes in System
+                        Settings often does not rebind them; clearing and
+                        re-granting does:
+                        <div class="terminal docs-code">
+                            <div class="code-label">Terminal</div>
+<pre><span class="t-prompt">$</span> <span class="t-cmd">tccutil reset Accessibility com.jake.SpacePill</span>
+<span class="t-prompt">$</span> <span class="t-cmd">tccutil reset ListenEvent   com.jake.SpacePill</span></pre>
+                        </div>
+                    </aside>
+
+                    <p class="fine">
+                        SpacePill also uses private SkyLight/CoreGraphics APIs to
+                        read Space IDs and detect transitions. That is a read-only
+                        observation of your window server state; nothing is
+                        transmitted anywhere.
+                    </p>
+                </section>
+
+                <!-- ================= Preferences ================= -->
+                <section id="preferences">
+                    <h2>Setup &amp; Preferences<a class="h-anchor" href="#preferences" aria-label="Link to Setup and Preferences">#</a></h2>
+
+                    <div class="docs-note">
+                        <strong>Start with the Setup window.</strong> On first
+                        launch SpacePill opens a Setup window that checks
+                        everything on this page at once — both permissions,
+                        whether your "Switch to Desktop" shortcuts are enabled,
+                        and whether Quick Switch and Space Notes are on — with a
+                        button through to each System Settings pane. It re-checks
+                        whenever you return to it, so you can fix something and
+                        watch it turn green. Reopen it any time by
+                        right-clicking the pill → <strong>Setup…</strong>
+                    </div>
+
+                    <p>
+                        Open Preferences by <strong>right-clicking the pill</strong>
+                        and choosing <strong>Preferences…</strong>
+                    </p>
+
+                    <aside class="caveat">
+                        <strong>Quick Switch and Space Notes start disabled.</strong>
+                        Their global hotkeys are not registered until you tick
+                        <strong>Enable Quick Switch Bar</strong> and
+                        <strong>Enable Space Notes</strong>. If
+                        <kbd>⌘</kbd><kbd>⇧</kbd><kbd>J</kbd> or
+                        <kbd>⌘</kbd><kbd>⇧</kbd><kbd>N</kbd> appears to do nothing
+                        on a fresh install, this is why. Quick Edit is always on.
+                    </aside>
+
+                    <figure class="docs-fig docs-fig-narrow">
+                        <img src="../assets/preferences.png" width="1116" height="1280"
+                             alt="The SpacePill Preferences window: three recordable hotkey fields for Quick Edit, Quick Switch, and Space Notes, plus toggles for Launch at Login, Enable Quick Switch Bar, Enable Space Notes, Match Space Color for Notes Border, a Max Notes Height slider at 300px, and a Reset All Space Labels and Colors button">
+                        <figcaption>Preferences: hotkeys on top, feature toggles below.</figcaption>
+                    </figure>
+
+                    <div class="table-scroll">
+                        <table class="doc-table">
+                            <thead>
+                                <tr><th scope="col">Setting</th><th scope="col">Default</th><th scope="col">Effect</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><th scope="row">Launch at Login</th><td>Off</td><td>Registers SpacePill as a login item.</td></tr>
+                                <tr><th scope="row">Enable Quick Switch Bar</th><td>Off</td><td>Registers the Quick Switch hotkey and prompts for Accessibility if needed.</td></tr>
+                                <tr><th scope="row">Enable Space Notes</th><td>Off</td><td>Registers the Notes hotkey and allows the floating notes panel to appear.</td></tr>
+                                <tr><th scope="row">Match Space Color for Notes Border</th><td>On</td><td>Draws the notes panel border in the current Space's colour.</td></tr>
+                                <tr><th scope="row">Max Notes Height</th><td>300&nbsp;px</td><td>Ceiling for the auto-sizing notes panel, adjustable from 100 to 800&nbsp;px.</td></tr>
+                                <tr><th scope="row">Hotkeys</th><td><a href="#hotkeys">See below</a></td><td>Each of the three hotkeys can be re-recorded. The Quick Switch and Notes rows only appear once those features are enabled.</td></tr>
+                                <tr><th scope="row">Reset All Space Labels &amp; Colors</th><td>—</td><td>Clears every per-Space label and colour. Notes are not touched.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ================= Hotkeys ================= -->
+                <section id="hotkeys">
+                    <h2>Hotkey reference<a class="h-anchor" href="#hotkeys" aria-label="Link to Hotkey reference">#</a></h2>
+
+                    <div class="table-scroll">
+                        <table class="doc-table">
+                            <caption>Global hotkeys. All three are rebindable in Preferences.</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Action</th>
+                                    <th scope="col">Default</th>
+                                    <th scope="col">Availability</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Quick Edit Space</th>
+                                    <td><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>S</kbd></td>
+                                    <td>Always registered</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Quick Switch Bar</th>
+                                    <td><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>J</kbd></td>
+                                    <td>Only when Quick Switch is enabled</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Space Notes</th>
+                                    <td><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>N</kbd></td>
+                                    <td>Only when Space Notes is enabled</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-scroll">
+                        <table class="doc-table">
+                            <caption>Mouse and in-panel keys.</caption>
+                            <thead>
+                                <tr><th scope="col">Where</th><th scope="col">Input</th><th scope="col">Does</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><th scope="row">Menu bar pill</th><td>Left click</td><td>Opens Quick Edit</td></tr>
+                                <tr><th scope="row">Menu bar pill</th><td>Right click</td><td>Context menu: Setup…, Preferences…, Quit</td></tr>
+                                <tr><th scope="row">Quick Switch Bar</th><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Move the selection</td></tr>
+                                <tr><th scope="row">Quick Switch Bar</th><td><kbd>⏎</kbd></td><td>Switch to the selected Space</td></tr>
+                                <tr><th scope="row">Quick Switch Bar</th><td><kbd>esc</kbd></td><td>Close without switching</td></tr>
+                                <tr><th scope="row">Quick Edit</th><td><kbd>⏎</kbd></td><td>Save label and colour</td></tr>
+                                <tr><th scope="row">Quick Edit</th><td><kbd>⌫</kbd></td><td>Clear this Space's label and colour</td></tr>
+                                <tr><th scope="row">Space Notes</th><td><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>N</kbd></td><td>Toggle the panel for this Space</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Rebinding</h3>
+                    <p>
+                        In Preferences, click a hotkey field and press the
+                        combination you want. SpacePill registers global hotkeys
+                        through the system, so a combination already claimed by
+                        macOS or another app will not register — if a new binding
+                        does nothing, try a different one. Bindings are stored in
+                        <a href="#settings"><code>~/.spacepill/settings.json</code></a>.
+                    </p>
+                </section>
+
+                <!-- ================= Pill ================= -->
+                <section id="pill">
+                    <h2>The menu bar pill<a class="h-anchor" href="#pill" aria-label="Link to The menu bar pill">#</a></h2>
+                    <p>
+                        The pill is a capsule showing two things: a circular badge
+                        with the Space's <strong>1-based index</strong> across all
+                        displays, and the Space's <strong>label</strong> in
+                        uppercase. Its fill is the colour you assigned; the badge
+                        is a darker shade of it.
+                    </p>
+
+                    <figure class="docs-fig docs-fig-pill">
+                        <img src="../assets/pill-menubar.png" width="340" height="52"
+                             alt="The SpacePill menu bar pill: a red capsule labelled CODE with the number 3 in a dark circular badge">
+                        <figcaption>Space 3, labelled Code, coloured red.</figcaption>
+                    </figure>
+
+                    <p>
+                        A Space you have never configured shows a neutral
+                        translucent pill with just the number. If SpacePill
+                        cannot determine the current Space at all, the pill shows
+                        <code>?</code> — switch Spaces once and it will pick it up.
+                    </p>
+                    <p>
+                        Detection combines three sources: the system's
+                        active-space notification, a two-second poll, and (with
+                        Input Monitoring granted) a keyboard event tap that makes
+                        an optimistic guess the moment you press
+                        <kbd>⌃</kbd><kbd>←</kbd>/<kbd>⌃</kbd><kbd>→</kbd>, so the
+                        pill turns over at the start of the animation rather than
+                        the end. If the guess turns out wrong, it reverts within
+                        a couple of seconds.
+                    </p>
+                    <p class="fine">
+                        The index is positional: it renumbers whenever Spaces are
+                        added, removed, or reordered in Mission Control. Labels
+                        and colours are keyed by the Space's stable UUID instead,
+                        so they follow the Space rather than the slot.
+                    </p>
+                </section>
+
+                <!-- ================= Quick Edit ================= -->
+                <section id="quick-edit">
+                    <h2>Quick Edit — label and colour a Space<a class="h-anchor" href="#quick-edit" aria-label="Link to Quick Edit">#</a></h2>
+                    <p>
+                        Press <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>S</kbd> (or
+                        left-click the pill) to open a small popover for the
+                        Space you are currently on.
+                    </p>
+                    <ul>
+                        <li><strong>Label</strong> — free text, shown uppercased in the pill and searchable from Quick Switch.</li>
+                        <li><strong>Colour</strong> — preset swatches plus the system colour picker for anything else.</li>
+                        <li><strong>Save</strong> (<kbd>⏎</kbd>) writes the label and colour against this Space's UUID.</li>
+                        <li><strong>Clear</strong> (<kbd>⌫</kbd>) removes the configuration, returning the pill to its neutral state.</li>
+                    </ul>
+                    <p>
+                        When you open Quick Edit on an unconfigured Space,
+                        SpacePill pre-selects the first preset colour no other
+                        Space is using, so a run of new Spaces ends up visually
+                        distinct without you choosing anything.
+                    </p>
+                </section>
+
+                <!-- ================= Quick Switch ================= -->
+                <section id="quick-switch">
+                    <h2>Quick Switch — jump to a Space by name<a class="h-anchor" href="#quick-switch" aria-label="Link to Quick Switch">#</a></h2>
+                    <p>
+                        Press <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>J</kbd> to open a
+                        search bar listing every Space across every display, each
+                        with its number badge and colour.
+                    </p>
+                    <ul>
+                        <li><strong>Fuzzy-match</strong> a label: the matcher is subsequence-based, so <code>dcs</code> finds <em>Docs</em> and <code>eml</code> finds <em>Email</em>. It is case- and accent-insensitive, and ranks the closest match first.</li>
+                        <li>Type a <strong>number</strong> to jump straight to that Space's index.</li>
+                        <li><kbd>↑</kbd> <kbd>↓</kbd> to move, <kbd>⏎</kbd> to switch, <kbd>esc</kbd> to dismiss.</li>
+                    </ul>
+
+                    <h3>Greyed-out rows</h3>
+                    <p>
+                        Before showing the list, SpacePill re-reads your System
+                        Settings shortcut configuration and works out which
+                        Spaces it can actually reach. Rows it cannot reach are
+                        dimmed, marked with a "no entry" symbol, and refuse to
+                        activate. The footer explains the specific reason for
+                        whichever row is selected.
+                    </p>
+
+                    <figure class="docs-fig docs-fig-narrow">
+                        <img src="../assets/quick-switch-unreachable.png" width="904" height="850"
+                             alt="The Quick Switch panel with Space 7 selected but greyed out and marked with a no-entry symbol; the footer reads: Enable 'Switch to Desktop 7' in Keyboard Shortcuts to jump here">
+                        <figcaption>An unreachable Space refuses loudly — the footer names the exact fix.</figcaption>
+                    </figure>
+
+                    <div class="table-scroll">
+                        <table class="doc-table">
+                            <thead>
+                                <tr><th scope="col">Footer message</th><th scope="col">Fix</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>"Enable <em>Switch to Desktop&nbsp;N</em> in Keyboard Shortcuts to jump here"</td>
+                                    <td>Tick that Desktop's checkbox — see <a href="#switching">Switching between Spaces</a>.</td>
+                                </tr>
+                                <tr>
+                                    <td>"Can't jump here — macOS has no shortcut past Desktop&nbsp;10"</td>
+                                    <td>Nothing to fix; macOS defines no such shortcut. Reduce your Space count, or reorder so the ones you jump to sit in the first ten.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="fine">
+                        This deliberately fails loudly. A jump that silently does
+                        nothing is indistinguishable from a bug, so SpacePill
+                        would rather tell you it is refusing.
+                    </p>
+                </section>
+
+                <!-- ================= Notes ================= -->
+                <section id="notes">
+                    <h2>Space Notes<a class="h-anchor" href="#notes" aria-label="Link to Space Notes">#</a></h2>
+                    <p>
+                        Press <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>N</kbd> to open a
+                        floating scratchpad anchored under the pill. Each Space
+                        has its own note, and the panel swaps content the instant
+                        you change Space.
+                    </p>
+                    <ul>
+                        <li><strong>Markdown highlighting</strong> for headings, bold, italics, inline code, fenced code blocks, and list markers.</li>
+                        <li><strong>Auto-continued lists</strong>: press <kbd>⏎</kbd> on a <code>-</code>, <code>*</code>, <code>+</code> or numbered list item and the next line starts with the same marker at the same indent.</li>
+                        <li><strong>Saves as you type</strong> — there is no save button and no unsaved state.</li>
+                        <li><strong>Remembers scroll position</strong> per Space, so returning puts you back where you were.</li>
+                        <li><strong>Auto-sizing panel</strong> that grows with the content up to the Max Notes Height set in Preferences.</li>
+                        <li><strong>Per-Space open state</strong>: leave the panel open on a Space and it reappears when you come back, staying hidden on Spaces where you closed it.</li>
+                        <li>The border can take the Space's colour, so you always know whose notes you're looking at.</li>
+                    </ul>
+                    <p>Notes are plain Markdown files on disk:</p>
+                    <div class="terminal docs-code">
+                        <div class="code-label">Path</div>
+<pre>~/.spacepill/space_&lt;index&gt;/notes.md</pre>
+                    </div>
+                    <aside class="caveat">
+                        <strong>Notes are keyed by index, not by Space identity.</strong>
+                        Labels and colours follow a Space's stable UUID, but note
+                        files are named after the Space's positional index.
+                        Adding, removing, or reordering Spaces renumbers those
+                        positions, so existing notes can end up attached to the
+                        wrong Space. The files are ordinary Markdown — if this
+                        happens, rename the <code>space_&lt;index&gt;</code>
+                        directories to match.
+                    </aside>
+                </section>
+
+                <!-- ================= CLI ================= -->
+                <section id="cli">
+                    <h2>The <code>spacepill</code> CLI<a class="h-anchor" href="#cli" aria-label="Link to the spacepill CLI">#</a></h2>
+                    <p>
+                        <code>spacepill</code> is a companion command line tool
+                        that lets scripts do from a terminal what the hotkeys do
+                        from the keyboard. It ships inside the app bundle and
+                        talks to the running app over a local Unix socket — it
+                        holds no state of its own, so <strong>the app must be
+                        running</strong> (commands exit with code 3 otherwise).
+                        The installer offers to put it on your <code>PATH</code>;
+                        you can also run <code>spacepill install-cli</code> at any
+                        time to symlink it into <code>/usr/local/bin</code>.
+                    </p>
+
+                    <div class="terminal docs-code">
+                        <div class="code-label">Terminal</div>
+<pre><span class="t-prompt">$</span> <span class="t-cmd">spacepill list</span>
+  1  <span class="t-dot-crimson">●</span> Inbox
+  2  <span class="t-dot-blue">●</span> Email
+  3  <span class="t-dot-red">●</span> Code      <span class="t-dim">← current</span>
+  4  <span class="t-dot-green">●</span> Docs
+
+<span class="t-prompt">$</span> <span class="t-cmd">spacepill jump docs</span>
+Switched to Space 4 <span class="t-dim">·</span> Docs
+
+<span class="t-prompt">$</span> <span class="t-cmd">spacepill notes --set &lt;&lt;&lt; "- [ ] review the release PR"</span></pre>
+                    </div>
+
+                    <h3>Commands</h3>
+                    <div class="table-scroll">
+                        <table class="doc-table doc-table-cli">
+                            <thead>
+                                <tr><th scope="col">Command</th><th scope="col">Does</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><th scope="row"><code>current [--json]</code></th><td>Show the Space you are on</td></tr>
+                                <tr><th scope="row"><code>list [--json]</code></th><td>List every Space with its number, label, and colour</td></tr>
+                                <tr><th scope="row"><code>jump &lt;number|label&gt;</code></th><td>Jump to a Space by number or fuzzy label (aliases: <code>switch</code>, <code>j</code>)</td></tr>
+                                <tr><th scope="row"><code>label &lt;text&gt; [--space N] [--color &lt;hex&gt;]</code></th><td>Label (and optionally colour) the current or given Space</td></tr>
+                                <tr><th scope="row"><code>label --clear [--space N]</code></th><td>Remove a label and colour</td></tr>
+                                <tr><th scope="row"><code>notes [--space N]</code></th><td>Print a Space's notes</td></tr>
+                                <tr><th scope="row"><code>notes --set [--space N]</code></th><td>Replace notes with stdin (or a quoted argument)</td></tr>
+                                <tr><th scope="row"><code>notes --edit [--space N]</code></th><td>Edit notes in <code>$EDITOR</code></td></tr>
+                                <tr><th scope="row"><code>notes --path [--space N]</code></th><td>Print where the notes file lives</td></tr>
+                                <tr><th scope="row"><code>doctor</code></th><td>Check permissions and shortcuts — run this first when switching doesn't work</td></tr>
+                                <tr><th scope="row"><code>update [--check]</code></th><td>Update SpacePill from the latest verified release</td></tr>
+                                <tr><th scope="row"><code>version</code></th><td>Print the version</td></tr>
+                                <tr><th scope="row"><code>install-cli</code></th><td>Symlink the CLI into <code>/usr/local/bin</code></td></tr>
+                                <tr><th scope="row"><code>help</code></th><td>Full usage, straight from your installed version</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        Omitting <code>--space</code> always means the Space you
+                        are on right now, and <code>--json</code> prints the raw
+                        response object for scripting. Jumping is subject to
+                        exactly the same constraints as the in-app Quick Switch:
+                        the corresponding "Switch to Desktop&nbsp;N" shortcut must
+                        be enabled, and Desktops past the tenth cannot be reached
+                        — see <a href="#switching">Switching between Spaces</a>.
+                    </p>
+
+                    <h3>Exit codes</h3>
+                    <div class="table-scroll">
+                        <table class="doc-table doc-table-compact">
+                            <thead>
+                                <tr><th scope="col">Code</th><th scope="col">Meaning</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><th scope="row"><code>0</code></th><td>Success</td></tr>
+                                <tr><th scope="row"><code>1</code></th><td>Error</td></tr>
+                                <tr><th scope="row"><code>2</code></th><td>Bad usage</td></tr>
+                                <tr><th scope="row"><code>3</code></th><td>SpacePill.app is not running</td></tr>
+                                <tr><th scope="row"><code>4</code></th><td>That Space cannot be switched to</td></tr>
+                                <tr><th scope="row"><code>5</code></th><td>No such Space</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Updating</h3>
+                    <p>
+                        <code>spacepill update</code> compares your installed
+                        version against the latest
+                        <a href="https://github.com/jakequist/spacepill/releases">GitHub release</a>
+                        and installs it only after verifying the download's
+                        code signature — an unverifiable build is refused rather
+                        than installed. <code>spacepill update --check</code>
+                        reports what's available without changing anything.
+                    </p>
+                </section>
+
+                <!-- ================= Settings file ================= -->
+                <section id="settings">
+                    <h2>The settings file<a class="h-anchor" href="#settings" aria-label="Link to The settings file">#</a></h2>
+                    <p>Everything SpacePill persists lives in one directory:</p>
+                    <div class="terminal docs-code">
+                        <div class="code-label">~/.spacepill/</div>
+<pre>~/.spacepill/settings.json          <span class="t-dim"># hotkeys, toggles, per-Space label + colour</span>
+~/.spacepill/space_1/notes.md       <span class="t-dim"># notes for the Space at index 1</span>
+~/.spacepill/space_2/notes.md
+~/.spacepill/space_&lt;N&gt;/notes.md
+~/.spacepill/spacepill.sock         <span class="t-dim"># CLI socket, only while the app runs</span></pre>
+                    </div>
+
+                    <p>
+                        <code>settings.json</code> is written by the app whenever
+                        anything changes. You can read it freely; if you edit it
+                        by hand, quit SpacePill first, or your changes will be
+                        overwritten on the next save.
+                    </p>
+
+                    <div class="terminal docs-code">
+                        <div class="code-label">~/.spacepill/settings.json</div>
+<pre>{
+  <span class="t-key">"isQuickSwitchEnabled"</span>: true,
+  <span class="t-key">"isNotesEnabled"</span>: true,
+  <span class="t-key">"matchSpaceColorForNotesBorder"</span>: true,
+  <span class="t-key">"maxNotesHeight"</span>: 300,
+  <span class="t-key">"quickEditHotKey"</span>:   { <span class="t-key">"keyCode"</span>: 1,  <span class="t-key">"modifiers"</span>: 768 },
+  <span class="t-key">"quickSwitchHotKey"</span>: { <span class="t-key">"keyCode"</span>: 38, <span class="t-key">"modifiers"</span>: 768 },
+  <span class="t-key">"notesHotKey"</span>:       { <span class="t-key">"keyCode"</span>: 45, <span class="t-key">"modifiers"</span>: 768 },
+  <span class="t-key">"spaceConfigs"</span>: {
+    <span class="t-str">"1A2B3C4D-5E6F-7081-9A0B-C1D2E3F40506"</span>: {
+      <span class="t-key">"label"</span>: <span class="t-str">"Agents"</span>,
+      <span class="t-key">"hexColor"</span>: <span class="t-str">"FF007AFF"</span>,
+      <span class="t-key">"isNotesOpen"</span>: true,
+      <span class="t-key">"scrollPosition"</span>: 0
+    }
+  }
+}</pre>
+                    </div>
+
+                    <h3>Fields</h3>
+                    <dl class="docs-fields">
+                        <dt>isQuickSwitchEnabled <span class="field-meta">bool, default false</span></dt>
+                        <dd>Whether the Quick Switch Bar and its hotkey are active.</dd>
+
+                        <dt>isNotesEnabled <span class="field-meta">bool, default false</span></dt>
+                        <dd>Whether Space Notes and its hotkey are active.</dd>
+
+                        <dt>matchSpaceColorForNotesBorder <span class="field-meta">bool, default true</span></dt>
+                        <dd>Draw the notes panel border in the current Space's colour rather than a neutral hairline.</dd>
+
+                        <dt>maxNotesHeight <span class="field-meta">number, default 300</span></dt>
+                        <dd>Maximum height of the notes panel in points. The Preferences slider ranges from 100 to 800 in steps of 50.</dd>
+
+                        <dt>quickEditHotKey / quickSwitchHotKey / notesHotKey</dt>
+                        <dd>
+                            Each is <code>{ "keyCode": &lt;virtual key code&gt;, "modifiers": &lt;Carbon modifier mask&gt; }</code>.
+                            The masks are <code>256</code> Command, <code>512</code>
+                            Shift, <code>2048</code> Option, <code>4096</code>
+                            Control, summed — so <code>768</code> is Command + Shift.
+                            Key codes are the usual macOS virtual key codes:
+                            <code>1</code> = S, <code>38</code> = J,
+                            <code>45</code> = N. Recording a hotkey in Preferences
+                            is much easier than editing this by hand.
+                        </dd>
+
+                        <dt>spaceConfigs</dt>
+                        <dd>A map from a Space's <strong>UUID</strong> to its configuration. Keying by UUID is what makes labels and colours survive reordering Spaces in Mission Control.</dd>
+
+                        <dt>spaceConfigs[uuid].label <span class="field-meta">string, optional</span></dt>
+                        <dd>The name shown in the pill (uppercased) and matched by Quick Switch.</dd>
+
+                        <dt>spaceConfigs[uuid].hexColor <span class="field-meta">string, optional</span></dt>
+                        <dd>Written as 8 hex digits in <code>AARRGGBB</code> order — <code>FF007AFF</code> is opaque system blue. Plain <code>RGB</code> and <code>RRGGBB</code> values are also accepted when reading.</dd>
+
+                        <dt>spaceConfigs[uuid].isNotesOpen <span class="field-meta">bool, optional</span></dt>
+                        <dd>Whether the notes panel should reappear when you return to this Space.</dd>
+
+                        <dt>spaceConfigs[uuid].scrollPosition <span class="field-meta">number, optional</span></dt>
+                        <dd>Saved vertical scroll offset of the notes panel for this Space.</dd>
+                    </dl>
+
+                    <p class="fine">
+                        Deleting <code>settings.json</code> and relaunching resets
+                        SpacePill to defaults — which also turns Quick Switch and
+                        Space Notes back off. Notes files are not touched by that.
+                    </p>
+                </section>
+
+                <!-- ================= Troubleshooting ================= -->
+                <section id="troubleshooting">
+                    <h2>Troubleshooting<a class="h-anchor" href="#troubleshooting" aria-label="Link to Troubleshooting">#</a></h2>
+
+                    <h3>Quick Switch opens but pressing Return doesn't move me</h3>
+                    <p>This is almost always one of three things, in order of likelihood:</p>
+                    <ol>
+                        <li><strong>The "Switch to Desktop&nbsp;N" shortcuts are not enabled.</strong> They are off on every fresh macOS install. <a href="#switching">Enable them →</a> If the row you selected is greyed out, this is definitely it.</li>
+                        <li><strong>Accessibility permission is missing.</strong> Check System&nbsp;Settings → Privacy&nbsp;&amp;&nbsp;Security → Accessibility and make sure SpacePill is listed <em>and</em> ticked.</li>
+                        <li><strong>The target Space is past Desktop&nbsp;10.</strong> macOS defines no shortcut for it, so it can never be jumped to.</li>
+                    </ol>
+                    <p><code>spacepill doctor</code> checks all three at once from the terminal.</p>
+
+                    <h3>Some Spaces are greyed out in the list</h3>
+                    <p>
+                        Deliberate. Either that Desktop has no shortcut enabled,
+                        or it sits past Desktop 10. Select the row and read the
+                        footer hint — it names the specific reason.
+                    </p>
+
+                    <h3><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>J</kbd> or <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>N</kbd> does nothing</h3>
+                    <p>
+                        Those hotkeys are not registered until the corresponding
+                        feature is switched on. Right-click the pill →
+                        Preferences → tick <strong>Enable Quick Switch Bar</strong>
+                        and/or <strong>Enable Space Notes</strong>.
+                    </p>
+                    <p>
+                        If a feature <em>is</em> enabled and the hotkey still does
+                        nothing, the combination may be claimed by macOS or
+                        another app — global hotkey registration fails when
+                        something else already owns it. Record a different one in
+                        Preferences.
+                    </p>
+
+                    <h3>Hotkeys worked, then stopped after an update</h3>
+                    <p>
+                        Permissions are bound to the app's code signature, and a
+                        new build can read as a new app. Reset and re-grant:
+                    </p>
+                    <div class="terminal docs-code">
+                        <div class="code-label">Terminal</div>
+<pre><span class="t-prompt">$</span> <span class="t-cmd">tccutil reset Accessibility com.jake.SpacePill</span>
+<span class="t-prompt">$</span> <span class="t-cmd">tccutil reset ListenEvent   com.jake.SpacePill</span></pre>
+                    </div>
+                    <p>Then relaunch SpacePill and approve the prompts.</p>
+
+                    <h3>The pill shows <code>?</code></h3>
+                    <p>
+                        SpacePill has not identified the current Space yet.
+                        Switch Spaces once. If it stays as <code>?</code>, the
+                        private APIs it reads may have changed in your macOS
+                        version — please
+                        <a href="https://github.com/jakequist/spacepill/issues">open an issue</a>
+                        with your macOS version.
+                    </p>
+
+                    <h3>The pill lags about a second behind <kbd>⌃</kbd><kbd>←</kbd>/<kbd>⌃</kbd><kbd>→</kbd></h3>
+                    <p>
+                        The keyboard event tap could not be created, which
+                        normally means Input Monitoring has not been granted.
+                        Everything still works — the pill just updates after the
+                        transition instead of during it. Grant Input Monitoring
+                        to get the snappy behaviour back. In the log you will see:
+                    </p>
+                    <div class="terminal docs-code">
+                        <div class="code-label">Log</div>
+<pre>[com.jake.SpacePill:spaces] Failed to create space switch event tap</pre>
+                    </div>
+
+                    <h3>My notes turned up on the wrong Space</h3>
+                    <p>
+                        Note files are named by positional index, so adding,
+                        deleting, or reordering Spaces can shift them. Quit
+                        SpacePill and rename the
+                        <code>~/.spacepill/space_&lt;index&gt;</code> directories
+                        to match the new numbering. See <a href="#notes">Space Notes</a>.
+                    </p>
+
+                    <h3>Reading the log</h3>
+                    <p>SpacePill logs to the unified system log under its bundle identifier:</p>
+                    <div class="terminal docs-code">
+                        <div class="code-label">Terminal</div>
+<pre><span class="t-dim"># live</span>
+<span class="t-prompt">$</span> <span class="t-cmd">log stream --predicate 'subsystem == "com.jake.SpacePill"'</span>
+
+<span class="t-dim"># the last five minutes</span>
+<span class="t-prompt">$</span> <span class="t-cmd">log show --predicate 'subsystem == "com.jake.SpacePill"' --last 5m</span></pre>
+                    </div>
+                    <p class="fine">
+                        Categories are <code>app</code>, <code>spaces</code>,
+                        <code>hotkeys</code>, <code>ui</code>, <code>settings</code>,
+                        and <code>notes</code>. Space labels and note text are
+                        deliberately redacted as <code>&lt;private&gt;</code>.
+                    </p>
+
+                    <h3>Starting over</h3>
+                    <p>
+                        Quit SpacePill, delete <code>~/.spacepill/settings.json</code>,
+                        and relaunch. That restores every default, including
+                        turning Quick Switch and Space Notes back off.
+                    </p>
+                </section>
+
+                <!-- ================= Uninstall ================= -->
+                <section id="uninstall">
+                    <h2>Uninstall<a class="h-anchor" href="#uninstall" aria-label="Link to Uninstall">#</a></h2>
+
+                    <div class="terminal docs-code">
+                        <div class="code-label">Terminal</div>
+<pre><span class="t-dim"># 1. Quit SpacePill from the pill's right-click menu, then:</span>
+<span class="t-prompt">$</span> <span class="t-cmd">rm -rf /Applications/SpacePill.app</span>
+
+<span class="t-dim"># 2. The CLI symlink, if you installed it:</span>
+<span class="t-prompt">$</span> <span class="t-cmd">rm -f /usr/local/bin/spacepill</span>
+
+<span class="t-dim"># 3. Settings and notes (this deletes your notes — back them up first):</span>
+<span class="t-prompt">$</span> <span class="t-cmd">rm -rf ~/.spacepill</span>
+
+<span class="t-dim"># 4. Revoke the permission grants:</span>
+<span class="t-prompt">$</span> <span class="t-cmd">tccutil reset Accessibility com.jake.SpacePill</span>
+<span class="t-prompt">$</span> <span class="t-cmd">tccutil reset ListenEvent   com.jake.SpacePill</span></pre>
+                    </div>
+                    <p>
+                        If you enabled Launch at Login, removing the app clears
+                        the login item; you can confirm under
+                        <span class="path">System&nbsp;Settings → General → Login&nbsp;Items&nbsp;&amp;&nbsp;Extensions</span>.
+                    </p>
+                    <p class="fine">
+                        The "Switch to Desktop" shortcuts you enabled are a macOS
+                        setting, not a SpacePill one. They stay on unless you
+                        untick them yourself — which is usually what you want.
+                    </p>
+                </section>
+
+            </article>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <span>SpacePill · made for macOS 13+</span>
+            <nav aria-label="Footer">
+                <a href="https://github.com/jakequist/spacepill">GitHub</a>
+                <a href="https://github.com/jakequist/spacepill/releases">Releases</a>
+                <a href="https://github.com/jakequist/spacepill/blob/main/LICENSE">MIT License</a>
+            </nav>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            "use strict";
+
+            /* Highlight the sidebar link for the section in view. */
+            var links = document.querySelectorAll(".docs-toc a[href^='#']");
+            if (!links.length || !("IntersectionObserver" in window)) return;
+
+            var byId = {};
+            links.forEach(function (a) {
+                byId[a.getAttribute("href").slice(1)] = a;
+            });
+
+            var current = null;
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) return;
+                    var link = byId[entry.target.id];
+                    if (!link || link === current) return;
+                    if (current) current.classList.remove("is-active");
+                    link.classList.add("is-active");
+                    current = link;
+                });
+            }, { rootMargin: "-15% 0px -70% 0px" });
+
+            document.querySelectorAll(".docs-body section[id]").forEach(function (sec) {
+                observer.observe(sec);
+            });
+        })();
+    </script>
+</body>
+</html>

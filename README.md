@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="#-install">Install</a> ·
-  <a href="https://spacepill.dev/">Documentation</a> ·
+  <a href="https://spacepill.dev/docs/">Documentation</a> ·
   <a href="https://github.com/jakequist/spacepill/releases/latest">Download</a>
 </p>
 
@@ -130,7 +130,7 @@ code at all. Your labels, colours, and notes are plain files under
 
 ## 📚 More
 
-- **[Documentation](https://spacepill.dev/)** — full guide, CLI reference, and troubleshooting
+- **[Documentation](https://spacepill.dev/docs/)** — full guide, CLI reference, and troubleshooting
 - **[Contributing](CONTRIBUTING.md)** — build from source and hack on it
 - Built with ❤️ by [Jake Quist](https://github.com/jakequist) · [MIT licensed](LICENSE)
 
