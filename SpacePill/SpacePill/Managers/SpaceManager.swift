@@ -2,14 +2,26 @@ import Foundation
 import AppKit
 
 private let spaceSwitchEventCallback: CGEventTapCallBack = { _, type, event, refcon in
-    guard type == .keyDown, let refcon = refcon else {
+    guard let refcon = refcon else {
         return Unmanaged.passUnretained(event)
     }
-    
     let manager = Unmanaged<SpaceManager>.fromOpaque(refcon).takeUnretainedValue()
+
+    // macOS disables a tap whose callback it judges too slow, and never
+    // re-enables it. Without this the pill silently stops tracking Ctrl+Arrow
+    // switches after long uptime -- the tap still exists, it just never fires.
+    if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+        Log.spaces.notice("Space switch event tap was disabled by the system; re-enabling")
+        manager.reenableEventTap()
+        return Unmanaged.passUnretained(event)
+    }
+
+    guard type == .keyDown else {
+        return Unmanaged.passUnretained(event)
+    }
     let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
     manager.handleSpaceArrowKeyDown(keyCode: keyCode, flags: event.flags)
-    
+
     return Unmanaged.passUnretained(event)
 }
 
@@ -87,6 +99,12 @@ class SpaceManager: ObservableObject {
         }
     }
     
+    fileprivate func reenableEventTap() {
+        if let tap = keyboardEventTap {
+            CGEvent.tapEnable(tap: tap, enable: true)
+        }
+    }
+
     fileprivate func handleSpaceArrowKeyDown(keyCode: UInt16, flags: CGEventFlags) {
         guard keyCode == 123 || keyCode == 124 else { return }
         guard flags.contains(.maskControl),

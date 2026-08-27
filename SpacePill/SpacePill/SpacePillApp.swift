@@ -57,13 +57,36 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             showSetupWindow()
         }
 
-        // Listen for setting changes
+        // Listen for setting changes. The async hop matters: objectWillChange
+        // fires *before* the value lands, so setupHotKeys must not read the
+        // settings until the next runloop turn.
         settingsManager.objectWillChange.sink { [weak self] _ in
             DispatchQueue.main.async {
                 self?.setupHotKeys()
             }
         }.store(in: &cancellables)
     }
+
+    /**
+     * The hotkey-relevant slice of settings, so `setupHotKeys` can tell a real
+     * hotkey change apart from unrelated settings traffic.
+     *
+     * This gate is load-bearing: every settings write fires `objectWillChange`,
+     * and scrolling the notes panel writes `scrollPosition` continuously -- so
+     * without it, all three hotkeys are torn down and re-registered many times
+     * a second during a scroll. Every cycle is a window where a keypress is
+     * silently dropped, and a transient Carbon failure mid-churn leaves a
+     * hotkey dead until the *next* settings write. Presented as "SpacePill
+     * stopped responding to hotkeys".
+     */
+    private struct HotKeySettings: Equatable {
+        let quickEdit: HotKeyConfig
+        let quickSwitch: HotKeyConfig
+        let notes: HotKeyConfig
+        let quickSwitchEnabled: Bool
+        let notesEnabled: Bool
+    }
+    private var appliedHotKeySettings: HotKeySettings?
     
     /**
      * One-time migration of the legacy `""` config bucket.
@@ -143,7 +166,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     private func setupHotKeys() {
-        Log.hotkeys.debug("setupHotKeys started")
+        let wanted = HotKeySettings(
+            quickEdit: settingsManager.quickEditHotKey,
+            quickSwitch: settingsManager.quickSwitchHotKey,
+            notes: settingsManager.notesHotKey,
+            quickSwitchEnabled: settingsManager.isQuickSwitchEnabled,
+            notesEnabled: settingsManager.isNotesEnabled
+        )
+        guard wanted != appliedHotKeySettings else { return }
+        appliedHotKeySettings = wanted
+
+        Log.hotkeys.info("Registering hotkeys (config changed)")
         // 1. Quick Edit Hotkey (Always enabled)
         hotKeyManager.registerHotKey(
             id: 1, 
@@ -186,7 +219,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         } else {
             hotKeyManager.unregisterHotKey(id: 3)
         }
-        Log.hotkeys.debug("setupHotKeys complete")
     }
     
     /**
